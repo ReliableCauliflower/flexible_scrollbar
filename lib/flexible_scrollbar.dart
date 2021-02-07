@@ -24,9 +24,9 @@ class FlexibleScrollbar extends StatefulWidget {
   final double thumbCrossAxisSize;
   final double thumbMainAxisMinSize;
 
-  final Axis scrollDirection;
-
   final Duration thumbFadeStartDuration;
+  final Duration thumbFadeDuration;
+
   final BarPosition barPosition;
 
   final BoxDecoration scrollLineDecoration;
@@ -55,9 +55,9 @@ class FlexibleScrollbar extends StatefulWidget {
     this.isDraggable = true,
     this.thumbCrossAxisSize = 10,
     this.thumbMainAxisSize = 40,
-    this.thumbFadeStartDuration = const Duration(milliseconds: 1000),
+    this.thumbFadeStartDuration,
+    this.thumbFadeDuration,
     this.barPosition = BarPosition.end,
-    this.scrollDirection = Axis.vertical,
     this.scrollLineDecoration,
     this.scrollLineCrossAxisPadding,
   })  : assert(child != null),
@@ -90,7 +90,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
 
   bool get isScrolling => isDragInProcess || isScrollInProcess || !isJumpTapUp;
 
-  bool get isVertical => widget.scrollDirection == Axis.vertical;
+  bool isVertical = true;
 
   bool get reverse {
     if (isVertical && scrollAxisDirection == AxisDirection.up) {
@@ -111,13 +111,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((Duration duration) {
       calculateScrollAreaFields();
-      scrollAxisDirection = widget.controller.position.axisDirection;
     });
-  }
-
-  @override
-  void didUpdateWidget(FlexibleScrollbar oldWidget) {
-    super.didUpdateWidget(oldWidget);
   }
 
   double get mainAxisScrollAreaSize =>
@@ -277,6 +271,10 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     final double width = widthByKey;
     final double height = heightByKey;
 
+    scrollAxisDirection = widget.controller.position.axisDirection;
+    isVertical = scrollAxisDirection == AxisDirection.up ||
+        scrollAxisDirection == AxisDirection.down;
+
     if (isVertical) {
       scrollAreaWidth = widget.maxScrollViewCrossAxisSize ??
           width ??
@@ -325,7 +323,9 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
       return;
     }
     final currentCountdownNumber = ++countDownCount;
-    Future.delayed(widget.thumbFadeStartDuration, () {
+    Future.delayed(
+        widget.thumbFadeStartDuration ?? const Duration(milliseconds: 1000),
+        () {
       if (currentCountdownNumber == countDownCount && !isScrolling && mounted) {
         setState(() {
           isThumbNeeded = false;
@@ -474,7 +474,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     bool isAlwaysVisible,
   }) {
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
+      duration: widget.thumbFadeDuration ?? const Duration(milliseconds: 200),
       opacity: isAlwaysVisible
           ? 1.0
           : isThumbNeeded
