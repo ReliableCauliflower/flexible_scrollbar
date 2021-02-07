@@ -14,6 +14,7 @@ class FlexibleScrollbar extends StatefulWidget {
   final bool isAdjustScrollThumb;
   final bool isAlwaysVisible;
   final bool isJumpOnScrollLineTapped;
+  final bool isDraggable;
 
   final double maxScrollViewMainAxisSize;
   final double maxScrollViewCrossAxisSize;
@@ -47,6 +48,7 @@ class FlexibleScrollbar extends StatefulWidget {
     this.isAdjustScrollThumb = true,
     this.isAlwaysVisible = false,
     this.isJumpOnScrollLineTapped = true,
+    this.isDraggable = true,
     this.thumbCrossAxisSize = 10,
     this.thumbMainAxisSize = 40,
     this.thumbFadeStartDuration = const Duration(milliseconds: 1000),
@@ -403,12 +405,18 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                       : 0.0,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onVerticalDragStart: isVertical ? onDragStart : null,
-                onVerticalDragUpdate: isVertical ? onDragUpdate : null,
-                onVerticalDragEnd: isVertical ? onDragEnd : null,
-                onHorizontalDragStart: !isVertical ? onDragStart : null,
-                onHorizontalDragUpdate: !isVertical ? onDragUpdate : null,
-                onHorizontalDragEnd: !isVertical ? onDragEnd : null,
+                onVerticalDragStart:
+                    isVertical && widget.isDraggable ? onDragStart : null,
+                onVerticalDragUpdate:
+                    isVertical && widget.isDraggable ? onDragUpdate : null,
+                onVerticalDragEnd:
+                    isVertical && widget.isDraggable ? onDragEnd : null,
+                onHorizontalDragStart:
+                    !isVertical && widget.isDraggable ? onDragStart : null,
+                onHorizontalDragUpdate:
+                    !isVertical && widget.isDraggable ? onDragUpdate : null,
+                onHorizontalDragEnd:
+                    !isVertical && widget.isDraggable ? onDragEnd : null,
                 onTapDown: onScrollLineTapped,
                 onTapUp: (TapUpDetails details) {
                   startHideThumbCountdown();
@@ -446,7 +454,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     return Container(
       height: isVertical ? thumbMainAxisSize : null,
       width: isVertical ? null : thumbMainAxisSize,
-      color: widget.scrollThumb == null ? Colors.grey : null,
+      color: widget.scrollThumb == null ? Colors.grey.withOpacity(0.8) : null,
       child: widget.scrollThumb,
     );
   }

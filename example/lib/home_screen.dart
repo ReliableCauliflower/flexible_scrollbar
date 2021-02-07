@@ -30,7 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context, int index) {
               final int randomColorNumber =
                   (math.Random().nextDouble() * 0xFFFFFF).toInt();
-              final Color randomColor = Color(randomColorNumber).withOpacity(1.0);
+              final Color randomColor =
+                  Color(randomColorNumber).withOpacity(1.0);
               return Container(
                 width: double.infinity,
                 height: 100,
