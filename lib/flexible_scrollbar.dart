@@ -52,11 +52,7 @@ class FlexibleScrollbar extends StatefulWidget {
     this.thumbFadeStartDuration = const Duration(milliseconds: 1000),
     this.barPosition = BarPosition.end,
     this.scrollDirection = Axis.vertical,
-  })  : assert(
-            key != null && key is GlobalKey || key == null,
-            'You need to pass GlobalKey instance '
-            'to key property of FlexibleScrollbar'),
-        assert(child != null),
+  })  : assert(child != null),
         assert(controller != null),
         super(key: key);
 
@@ -65,6 +61,8 @@ class FlexibleScrollbar extends StatefulWidget {
 }
 
 class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
+  final GlobalKey scrollAreaKey = GlobalKey();
+
   double barOffset = 0.0;
   double viewOffset = 0.0;
   double barMaxScrollExtent;
@@ -109,18 +107,23 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     });
   }
 
+  @override
+  void didUpdateWidget(FlexibleScrollbar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+  }
+
   double get mainAxisScrollAreaSize =>
       isVertical ? scrollAreaHeight : scrollAreaWidth;
 
   double get crossAxisScrollAreaSize =>
       !isVertical ? scrollAreaHeight : scrollAreaWidth;
 
-  double widthByKey(Key key) {
-    return (widget.key as GlobalKey).currentContext.size.width;
+  double get widthByKey {
+    return scrollAreaKey.currentContext.size.width;
   }
 
-  double heightByKey(Key key) {
-    return (widget.key as GlobalKey).currentContext.size.height;
+  double get heightByKey {
+    return scrollAreaKey.currentContext.size.height;
   }
 
   double get viewMaxScrollExtent => widget.controller.position.maxScrollExtent;
@@ -263,13 +266,9 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   }
 
   void calculateScrollAreaFields() {
-    double width;
-    double height;
+    final double width = widthByKey;
+    final double height = heightByKey;
 
-    if (widget.key != null) {
-      width = widthByKey(widget.key);
-      height = heightByKey(widget.key);
-    }
     if (isVertical) {
       scrollAreaWidth = widget.maxScrollViewCrossAxisSize ??
           width ??
@@ -367,6 +366,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     }
 
     return NotificationListener<ScrollNotification>(
+      key: scrollAreaKey,
       onNotification: (ScrollNotification notification) {
         if (notification is ScrollEndNotification) {
           isScrollInProcess = false;
@@ -396,7 +396,11 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
             ),
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
-              opacity: widget.isAlwaysVisible ? 1.0 : isThumbNeeded ? 1.0 : 0.0,
+              opacity: widget.isAlwaysVisible
+                  ? 1.0
+                  : isThumbNeeded
+                      ? 1.0
+                      : 0.0,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onVerticalDragStart: isVertical ? onDragStart : null,
@@ -412,11 +416,15 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                 },
                 child: Container(
                   height: isVertical
-                      ? isScrollable ? scrollAreaHeight : null
+                      ? isScrollable
+                          ? scrollAreaHeight
+                          : null
                       : widget.thumbCrossAxisSize,
                   width: isVertical
                       ? widget.thumbCrossAxisSize
-                      : isScrollable ? scrollAreaWidth : null,
+                      : isScrollable
+                          ? scrollAreaWidth
+                          : null,
                   padding: EdgeInsets.only(
                     top: isVertical && !reverse ? barOffset : 0,
                     bottom: isVertical && reverse ? barOffset : 0,

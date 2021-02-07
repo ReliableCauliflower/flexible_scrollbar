@@ -13,40 +13,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FlexibleScrollbar(
-        key: GlobalKey(),
-        controller: scrollController,
-        scrollThumb: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
-            color: Colors.black.withOpacity(0.6),
-          ),
-        ),
-        child: GridView.builder(
-          gridDelegate:
-              SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+      body: SafeArea(
+        child: FlexibleScrollbar(
           controller: scrollController,
-          itemCount: 99,
-          itemBuilder: (context, int index) {
-            final int randomColorNumber =
-                (math.Random().nextDouble() * 0xFFFFFF).toInt();
-            final Color randomColor = Color(randomColorNumber).withOpacity(1.0);
-            return Container(
-              width: double.infinity,
-              height: 100,
-              color: randomColor,
-              child: Center(
-                child: Text(
-                  (++index).toString(),
-                  style: TextStyle(
-                    color: randomColor.computeLuminance() > 0.5
-                        ? Colors.black
-                        : Colors.white,
+          scrollThumb: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.black.withOpacity(0.6),
+            ),
+          ),
+          child: GridView.builder(
+            gridDelegate:
+                SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+            controller: scrollController,
+            itemCount: 99,
+            itemBuilder: (context, int index) {
+              final int randomColorNumber =
+                  (math.Random().nextDouble() * 0xFFFFFF).toInt();
+              final Color randomColor = Color(randomColorNumber).withOpacity(1.0);
+              return Container(
+                width: double.infinity,
+                height: 100,
+                color: randomColor,
+                child: Center(
+                  child: Text(
+                    (++index).toString(),
+                    style: TextStyle(
+                      color: randomColor.computeLuminance() > 0.5
+                          ? Colors.black
+                          : Colors.white,
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
