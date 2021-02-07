@@ -34,18 +34,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (_, orientation) {
-      scrollDirection =
-          orientation == Orientation.portrait ? Axis.vertical : Axis.horizontal;
+      final bool isVertical = orientation == Orientation.portrait;
+      scrollDirection = isVertical ? Axis.vertical : Axis.horizontal;
       return Scaffold(
         body: SafeArea(
           child: FlexibleScrollbar(
             controller: scrollController,
-            scrollThumb: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: Colors.black.withOpacity(0.6),
-              ),
-            ),
+            isAlwaysVisible: true,
+            scrollThumb: (ScrollbarInfo info) {
+              return AnimatedContainer(
+                width: isVertical
+                    ? info.isDragging
+                        ? 10
+                        : 5
+                    : info.thumbSize.height,
+                height: !isVertical
+                    ? info.isDragging
+                        ? 10
+                        : 5
+                    : info.thumbSize.width,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
+                ),
+                duration: const Duration(milliseconds: 300),
+              );
+            },
             barPosition: barPosition,
             scrollLineCrossAxisPadding: 2,
             child: GridView.builder(
