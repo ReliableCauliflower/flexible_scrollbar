@@ -14,6 +14,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   BarPosition barPosition = BarPosition.end;
 
+  Axis scrollDirection = Axis.vertical;
+
   final int itemsCount = 99;
 
   final List<Color> itemsColors = [];
@@ -48,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
             controller: scrollController,
             itemCount: 99,
+            scrollDirection: scrollDirection,
             itemBuilder: (context, int index) {
               final randomColor = itemsColors[index];
               return Container(
@@ -69,21 +72,42 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Transform.rotate(
-          angle: pi / 2,
-          child: Icon(Icons.height),
-        ),
-        onPressed: () => setState(() {
-          switch (barPosition) {
-            case BarPosition.start:
-              barPosition = BarPosition.end;
-              break;
-            case BarPosition.end:
-              barPosition = BarPosition.start;
-              break;
-          }
-        }),
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FloatingActionButton(
+              child: Icon(Icons.refresh),
+              onPressed: () => setState(() {
+                switch (scrollDirection) {
+                  case Axis.horizontal:
+                    scrollDirection = Axis.vertical;
+                    break;
+                  case Axis.vertical:
+                    scrollDirection = Axis.horizontal;
+                    break;
+                }
+              }),
+            ),
+          ),
+          FloatingActionButton(
+            child: Transform.rotate(
+              angle: scrollDirection == Axis.vertical ? pi / 2 : 0,
+              child: Icon(Icons.height),
+            ),
+            onPressed: () => setState(() {
+              switch (barPosition) {
+                case BarPosition.start:
+                  barPosition = BarPosition.end;
+                  break;
+                case BarPosition.end:
+                  barPosition = BarPosition.start;
+                  break;
+              }
+            }),
+          ),
+        ],
       ),
     );
   }
