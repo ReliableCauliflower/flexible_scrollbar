@@ -73,8 +73,8 @@ class FlexibleScrollbar extends StatefulWidget {
 class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   final GlobalKey scrollAreaKey = GlobalKey();
 
-  double barOffset = 0.0;
-  double viewOffset = 0.0;
+  double barOffset = 0;
+  double viewOffset = 0;
   double barMaxScrollExtent;
   double thumbMainAxisSize;
 
@@ -249,13 +249,6 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
       if (notification is ScrollUpdateNotification) {
         final barDelta = getBarDelta(notification.scrollDelta);
         barOffset += barDelta;
-
-        if (barOffset < 0) {
-          barOffset = 0;
-        }
-        if (barOffset > barMaxScrollExtent) {
-          barOffset = barMaxScrollExtent;
-        }
 
         viewOffset += notification.scrollDelta;
         if (viewOffset < widget.controller.position.minScrollExtent) {
@@ -440,17 +433,20 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                           ? scrollAreaWidth
                           : null,
                   decoration: widget.scrollLineDecoration,
-                  padding: EdgeInsets.only(
-                    top: isVertical && !reverse ? barOffset : crossAxisPadding,
-                    bottom:
-                        isVertical && reverse ? barOffset : crossAxisPadding,
-                    left:
-                        !isVertical && !reverse ? barOffset : crossAxisPadding,
-                    right:
-                        !isVertical && reverse ? barOffset : crossAxisPadding,
-                  ),
                   alignment: scrollLineAlignment,
-                  child: buildScrollThumb(),
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    overflow: Overflow.visible,
+                    children: [
+                      Positioned(
+                        top: isVertical && !reverse ? barOffset : null,
+                        bottom: isVertical && reverse ? barOffset : null,
+                        left: !isVertical && !reverse ? barOffset : null,
+                        right: !isVertical && reverse ? barOffset : null,
+                        child: buildScrollThumb(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -464,8 +460,8 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     return animatedFade(
       isAlwaysVisible: widget.isAlwaysVisible,
       child: Container(
-        height: isVertical ? thumbMainAxisSize : null,
-        width: isVertical ? null : thumbMainAxisSize,
+        height: isVertical ? thumbMainAxisSize : widget.thumbCrossAxisSize,
+        width: isVertical ? widget.thumbCrossAxisSize : thumbMainAxisSize,
         color: widget.scrollThumb == null ? Colors.grey.withOpacity(0.8) : null,
         child: widget.scrollThumb,
       ),
