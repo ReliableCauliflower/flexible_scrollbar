@@ -22,6 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.black.withOpacity(0.6),
             ),
           ),
+          scrollLineCrossAxisPadding: 2,
+          scrollLineDecoration: BoxDecoration(color: Colors.white),
+          isFadeScrollLine: true,
           child: GridView.builder(
             gridDelegate:
                 SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
