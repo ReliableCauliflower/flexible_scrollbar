@@ -45,13 +45,13 @@ class _HomeScreenState extends State<HomeScreen> {
               return AnimatedContainer(
                 width: isVertical
                     ? info.isDragging
-                        ? 10
-                        : 5
+                        ? info.thumbSize.width
+                        : info.thumbSize.width / 2
                     : info.thumbSize.height,
                 height: !isVertical
                     ? info.isDragging
-                        ? 10
-                        : 5
+                        ? info.thumbSize.height
+                        : info.thumbSize.height / 2
                     : info.thumbSize.width,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
@@ -61,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             barPosition: barPosition,
-            scrollLineCrossAxisPadding: 2,
             child: GridView.builder(
               gridDelegate:
                   SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
