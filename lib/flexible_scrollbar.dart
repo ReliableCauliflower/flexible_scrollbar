@@ -261,8 +261,8 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   void calculateScrollAreaFields(Orientation newOrientation) {
     if (newOrientation != lastOrientation ||
         scrollAxisDirection != widget.controller.position.axisDirection) {
-      lastOrientation = newOrientation;
       setState(() {
+        lastOrientation = newOrientation;
         final double width = widthByKey;
         final double height = heightByKey;
         scrollAxisDirection = widget.controller.position.axisDirection;
@@ -307,6 +307,13 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
           isThumbNeeded = widget.isAlwaysVisible;
         } else {
           isScrollable = false;
+        }
+        if (barOffset > 0) {
+          final double scrollOffset = widget.controller.offset;
+          final double mainAxisSize = isVertical ? heightByKey : widthByKey;
+          barOffset = mainAxisSize /
+              (viewMaxScrollExtent + mainAxisSize) *
+              scrollOffset;
         }
       });
     }

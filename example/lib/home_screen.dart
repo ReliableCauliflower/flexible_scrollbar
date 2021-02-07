@@ -33,82 +33,65 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: FlexibleScrollbar(
-          controller: scrollController,
-          scrollThumb: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              color: Colors.black.withOpacity(0.6),
-            ),
-          ),
-          scrollLineOffset: 2,
-          barPosition: barPosition,
-          child: GridView.builder(
-            gridDelegate:
-                SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+    return OrientationBuilder(builder: (_, orientation) {
+      scrollDirection =
+          orientation == Orientation.portrait ? Axis.vertical : Axis.horizontal;
+      return Scaffold(
+        body: SafeArea(
+          child: FlexibleScrollbar(
             controller: scrollController,
-            itemCount: 99,
-            scrollDirection: scrollDirection,
-            itemBuilder: (context, int index) {
-              final randomColor = itemsColors[index];
-              return Container(
-                width: double.infinity,
-                height: 100,
-                color: randomColor,
-                child: Center(
-                  child: Text(
-                    (++index).toString(),
-                    style: TextStyle(
-                      color: randomColor.computeLuminance() > 0.5
-                          ? Colors.black
-                          : Colors.white,
+            scrollThumb: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: Colors.black.withOpacity(0.6),
+              ),
+            ),
+            scrollLineOffset: 2,
+            barPosition: barPosition,
+            child: GridView.builder(
+              gridDelegate:
+                  SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+              controller: scrollController,
+              itemCount: 99,
+              scrollDirection: scrollDirection,
+              itemBuilder: (context, int index) {
+                final randomColor = itemsColors[index];
+                return Container(
+                  width: double.infinity,
+                  height: 100,
+                  color: randomColor,
+                  child: Center(
+                    child: Text(
+                      (++index).toString(),
+                      style: TextStyle(
+                        color: randomColor.computeLuminance() > 0.5
+                            ? Colors.black
+                            : Colors.white,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
-      ),
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FloatingActionButton(
-              child: Icon(Icons.refresh),
-              onPressed: () => setState(() {
-                switch (scrollDirection) {
-                  case Axis.horizontal:
-                    scrollDirection = Axis.vertical;
-                    break;
-                  case Axis.vertical:
-                    scrollDirection = Axis.horizontal;
-                    break;
-                }
-              }),
-            ),
+        floatingActionButton: FloatingActionButton(
+          child: Transform.rotate(
+            angle: scrollDirection == Axis.vertical ? pi / 2 : 0,
+            child: Icon(Icons.height),
           ),
-          FloatingActionButton(
-            child: Transform.rotate(
-              angle: scrollDirection == Axis.vertical ? pi / 2 : 0,
-              child: Icon(Icons.height),
-            ),
-            onPressed: () => setState(() {
-              switch (barPosition) {
-                case BarPosition.start:
-                  barPosition = BarPosition.end;
-                  break;
-                case BarPosition.end:
-                  barPosition = BarPosition.start;
-                  break;
-              }
-            }),
-          ),
-        ],
-      ),
-    );
+          onPressed: () => setState(() {
+            switch (barPosition) {
+              case BarPosition.start:
+                barPosition = BarPosition.end;
+                break;
+              case BarPosition.end:
+                barPosition = BarPosition.start;
+                break;
+            }
+          }),
+        ),
+      );
+    });
   }
 }
