@@ -20,9 +20,11 @@ class FlexibleScrollbar extends StatefulWidget {
   final double maxScrollViewMainAxisSize;
   final double maxScrollViewCrossAxisSize;
   final double scrollLineCrossAxisPositionRatio;
+  final double scrollLineOffset;
   final double thumbMainAxisSize;
   final double thumbCrossAxisSize;
   final double thumbMainAxisMinSize;
+  final double scrollLineCrossAxisPadding;
 
   final Duration thumbFadeStartDuration;
   final Duration thumbFadeDuration;
@@ -30,7 +32,6 @@ class FlexibleScrollbar extends StatefulWidget {
   final BarPosition barPosition;
 
   final BoxDecoration scrollLineDecoration;
-  final double scrollLineCrossAxisPadding;
 
   final Function(DragStartDetails details) onDragStart;
   final Function(DragEndDetails details) onDragEnd;
@@ -44,6 +45,7 @@ class FlexibleScrollbar extends StatefulWidget {
     this.maxScrollViewMainAxisSize,
     this.maxScrollViewCrossAxisSize,
     this.scrollLineCrossAxisPositionRatio,
+    this.scrollLineOffset,
     this.onDragStart,
     this.onDragEnd,
     this.onDragUpdate,
@@ -360,9 +362,10 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
       }
     }
 
-    double scrollLineOffset = 0;
+    double scrollLineOffset = widget.scrollLineOffset ?? 0;
     if (widget.scrollLineCrossAxisPositionRatio != null &&
-        widget.scrollLineCrossAxisPositionRatio >= 0) {
+        widget.scrollLineCrossAxisPositionRatio >= 0 &&
+        scrollLineOffset == 0) {
       scrollLineOffset =
           (crossAxisScrollAreaSize * widget.scrollLineCrossAxisPositionRatio) -
               (widget.thumbCrossAxisSize / 2);
