@@ -10,10 +10,10 @@ class FlexibleScrollbar extends StatefulWidget {
 
   final Widget child;
   final Widget scrollThumb;
+  final Widget scrollLine;
 
   final bool isAdjustScrollThumb;
   final bool isAlwaysVisible;
-  final bool isFadeScrollLine;
   final bool isJumpOnScrollLineTapped;
   final bool isDraggable;
 
@@ -31,8 +31,6 @@ class FlexibleScrollbar extends StatefulWidget {
 
   final BarPosition barPosition;
 
-  final BoxDecoration scrollLineDecoration;
-
   final Function(DragStartDetails details) onDragStart;
   final Function(DragEndDetails details) onDragEnd;
   final Function(DragUpdateDetails details) onDragUpdate;
@@ -42,6 +40,7 @@ class FlexibleScrollbar extends StatefulWidget {
     @required this.child,
     @required this.controller,
     this.scrollThumb,
+    this.scrollLine,
     this.maxScrollViewMainAxisSize,
     this.maxScrollViewCrossAxisSize,
     this.scrollLineCrossAxisPositionRatio,
@@ -52,7 +51,6 @@ class FlexibleScrollbar extends StatefulWidget {
     this.thumbMainAxisMinSize,
     this.isAdjustScrollThumb = true,
     this.isAlwaysVisible = false,
-    this.isFadeScrollLine = false,
     this.isJumpOnScrollLineTapped = true,
     this.isDraggable = true,
     this.thumbCrossAxisSize = 10,
@@ -60,7 +58,6 @@ class FlexibleScrollbar extends StatefulWidget {
     this.thumbFadeStartDuration,
     this.thumbFadeDuration,
     this.barPosition = BarPosition.end,
-    this.scrollLineDecoration,
     this.scrollLineCrossAxisPadding,
   })  : assert(child != null),
         assert(controller != null),
@@ -429,8 +426,14 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                   startHideThumbCountdown();
                   isJumpTapUp = true;
                 },
-                child: animatedFade(
-                  isAlwaysVisible: !widget.isFadeScrollLine,
+                child: AnimatedOpacity(
+                  duration: widget.thumbFadeDuration ??
+                      const Duration(milliseconds: 200),
+                  opacity: widget.isAlwaysVisible
+                      ? 1.0
+                      : isThumbNeeded
+                          ? 1.0
+                          : 0.0,
                   child: Container(
                     height: isVertical
                         ? isScrollable
@@ -442,12 +445,14 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                         : isScrollable
                             ? scrollAreaWidth
                             : null,
-                    decoration: widget.scrollLineDecoration,
                     alignment: scrollLineAlignment,
                     child: Stack(
-                      alignment: Alignment.topCenter,
+                      alignment: isVertical
+                          ? Alignment.topCenter
+                          : Alignment.centerLeft,
                       overflow: Overflow.visible,
                       children: [
+                        if (widget.scrollLine != null) widget.scrollLine,
                         Positioned(
                           top: isVertical && !reverse ? barOffset : null,
                           bottom: isVertical && reverse ? barOffset : null,
@@ -468,29 +473,11 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   }
 
   Widget buildScrollThumb() {
-    return animatedFade(
-      isAlwaysVisible: widget.isAlwaysVisible,
-      child: Container(
-        height: isVertical ? thumbMainAxisSize : widget.thumbCrossAxisSize,
-        width: isVertical ? widget.thumbCrossAxisSize : thumbMainAxisSize,
-        color: widget.scrollThumb == null ? Colors.grey.withOpacity(0.8) : null,
-        child: widget.scrollThumb,
-      ),
-    );
-  }
-
-  Widget animatedFade({
-    Widget child,
-    bool isAlwaysVisible,
-  }) {
-    return AnimatedOpacity(
-      duration: widget.thumbFadeDuration ?? const Duration(milliseconds: 200),
-      opacity: isAlwaysVisible
-          ? 1.0
-          : isThumbNeeded
-              ? 1.0
-              : 0.0,
-      child: child,
+    return Container(
+      height: isVertical ? thumbMainAxisSize : widget.thumbCrossAxisSize,
+      width: isVertical ? widget.thumbCrossAxisSize : thumbMainAxisSize,
+      color: widget.scrollThumb == null ? Colors.grey.withOpacity(0.8) : null,
+      child: widget.scrollThumb,
     );
   }
 }
