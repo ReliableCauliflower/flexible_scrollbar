@@ -192,7 +192,10 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     }
   }
 
+  bool _isScrollingBeforeJump = false;
+
   void onScrollLineTapped(TapDownDetails details) {
+    _isScrollingBeforeJump = isScrolling;
     if (widget.isJumpOnScrollLineTapped) {
       setState(() {
         isThumbNeeded = true;
@@ -364,6 +367,8 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     );
   }
 
+  int _afterJumpEventsCount = 0;
+
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (_, Orientation orientation) {
@@ -400,13 +405,25 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
         onNotification: (ScrollNotification notification) {
           if (notification is ScrollEndNotification) {
             isScrollInProcess = false;
-            isJumpingTo = false;
+            if (isJumpingTo) {
+              if (_isScrollingBeforeJump) {
+                _afterJumpEventsCount++;
+                if (_afterJumpEventsCount == 2) {
+                  isJumpingTo = false;
+                  _afterJumpEventsCount = 0;
+                }
+              } else {
+                isJumpingTo = false;
+              }
+            }
             startHideThumbCountdown();
           } else if (notification is ScrollStartNotification) {
             isScrollInProcess = true;
-            setState(() {
-              isThumbNeeded = true;
-            });
+            if (!isThumbNeeded) {
+              setState(() {
+                isThumbNeeded = true;
+              });
+            }
           }
           if (isJumpingTo) {
             return true;
@@ -494,7 +511,9 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     return Container(
       height: isVertical ? thumbMainAxisSize : null,
       width: isVertical ? null : thumbMainAxisSize,
-      color: widget.scrollThumbBuilder == null ? Colors.grey.withOpacity(0.8) : null,
+      color: widget.scrollThumbBuilder == null
+          ? Colors.grey.withOpacity(0.8)
+          : null,
       child: widget.scrollThumbBuilder(scrollInfo),
     );
   }
