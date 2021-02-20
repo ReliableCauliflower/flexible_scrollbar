@@ -18,10 +18,12 @@ class FlexibleScrollbar extends StatefulWidget {
   final bool isAlwaysVisible;
   final bool isJumpOnScrollLineTapped;
   final bool isDraggable;
+  final bool autoPositionLabel;
 
   final double scrollLineOffset;
   final double thumbMainAxisMinSize;
   final double scrollLineCrossAxisSize;
+  final double scrollLabelOffset;
 
   final Duration thumbFadeStartDuration;
   final Duration thumbFadeDuration;
@@ -51,6 +53,8 @@ class FlexibleScrollbar extends StatefulWidget {
     this.thumbFadeDuration,
     this.barPosition = BarPosition.end,
     this.scrollLineCrossAxisSize,
+    this.autoPositionLabel = true,
+    this.scrollLabelOffset = 4,
   })  : assert(child != null),
         assert(controller != null),
         super(key: key);
@@ -62,6 +66,7 @@ class FlexibleScrollbar extends StatefulWidget {
 class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   final GlobalKey childKey = GlobalKey();
   final GlobalKey thumbKey = GlobalKey();
+  final GlobalKey scrollLabelKey = GlobalKey();
 
   double barOffset = 0;
   double viewOffset = 0;
@@ -84,12 +89,14 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   bool isVertical = true;
   bool needsReCalculate = false;
   bool isScrollingBeforeJump = false;
+  bool scrollFieldsInitialised = false;
 
   AxisDirection scrollAxisDirection;
 
   Orientation lastOrientation;
 
   Size previousThumbSize;
+  Size scrollLabelSize = Size(0, 0);
 
   bool get isScrolling => isDragging || isScrollInProcess || !isJumpTapUp;
 
@@ -154,6 +161,60 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
 
   @override
   Widget build(BuildContext context) {
+    final double scrollLineCrossAxisSize =
+        widget.scrollLineCrossAxisSize ?? thumbCrossAxisSize;
+
+    final double labelOffset =
+        scrollLineCrossAxisSize + widget.scrollLabelOffset;
+
+    final bool hasLabel = widget.scrollLabelBuilder != null;
+    Widget scrollLabel;
+    if (hasLabel) {
+      scrollLabel = Container(
+        key: scrollLabelKey,
+        child: scrollFieldsInitialised
+            ? fadeAnimationWrapper(child: widget.scrollLabelBuilder(scrollInfo))
+            : Container(),
+      );
+      if (widget.autoPositionLabel && scrollFieldsInitialised) {
+        final double thumbMainAxisSizeHalf = (thumbMainAxisSize ?? 0) / 2;
+        final double verticalOffset =
+            thumbMainAxisSizeHalf - scrollLabelSize.height / 2;
+        final double horizontalOffset =
+            thumbMainAxisSizeHalf - scrollLabelSize.width / 2;
+
+        final offset = EdgeInsets.only(
+          top: !isVertical && !isEnd ? labelOffset : null,
+          bottom: !isVertical && isEnd ? labelOffset : null,
+          left: isVertical && !isEnd ? labelOffset : null,
+          right: isVertical && isEnd ? labelOffset : null,
+        );
+
+        final adjustedThumbOffset = EdgeInsets.only(
+          top:
+              thumbOffset.top != null ? thumbOffset.top + verticalOffset : null,
+          bottom: thumbOffset.bottom != null
+              ? thumbOffset.bottom + verticalOffset
+              : null,
+          left: thumbOffset.left != null
+              ? thumbOffset.left + horizontalOffset
+              : null,
+          right: thumbOffset.right != null
+              ? thumbOffset.right + horizontalOffset
+              : null,
+        );
+
+        scrollLabel = Positioned(
+          top: !isVertical && !isEnd ? offset.top : adjustedThumbOffset.top,
+          bottom:
+              !isVertical && isEnd ? offset.bottom : adjustedThumbOffset.bottom,
+          left: isVertical && !isEnd ? offset.left : adjustedThumbOffset.left,
+          right: isVertical && isEnd ? offset.right : adjustedThumbOffset.right,
+          child: scrollLabel,
+        );
+      }
+    }
+
     return OrientationBuilder(
       builder: (_, Orientation orientation) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -227,39 +288,28 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                   bottom: !isVertical && isEnd ? scrollLineOffset : 0,
                 ),
                 child: Container(
-                  width: isVertical
-                      ? widget.scrollLineCrossAxisSize ?? thumbCrossAxisSize
-                      : null,
-                  height: !isVertical
-                      ? widget.scrollLineCrossAxisSize ?? thumbCrossAxisSize
-                      : null,
+                  width: isVertical ? scrollLineCrossAxisSize : null,
+                  height: !isVertical ? scrollLineCrossAxisSize : null,
                   child: GestureDetector(
                     behavior:
-                        widget.isDraggable && widget.isJumpOnScrollLineTapped
-                            ? HitTestBehavior.opaque
-                            : HitTestBehavior.translucent,
+                    widget.isDraggable && widget.isJumpOnScrollLineTapped
+                        ? HitTestBehavior.opaque
+                        : HitTestBehavior.translucent,
                     onVerticalDragStart:
-                        isVertical && widget.isDraggable ? onDragStart : null,
+                    isVertical && widget.isDraggable ? onDragStart : null,
                     onVerticalDragUpdate:
-                        isVertical && widget.isDraggable ? onDragUpdate : null,
+                    isVertical && widget.isDraggable ? onDragUpdate : null,
                     onVerticalDragEnd:
-                        isVertical && widget.isDraggable ? onDragEnd : null,
+                    isVertical && widget.isDraggable ? onDragEnd : null,
                     onHorizontalDragStart:
-                        !isVertical && widget.isDraggable ? onDragStart : null,
+                    !isVertical && widget.isDraggable ? onDragStart : null,
                     onHorizontalDragUpdate:
-                        !isVertical && widget.isDraggable ? onDragUpdate : null,
+                    !isVertical && widget.isDraggable ? onDragUpdate : null,
                     onHorizontalDragEnd:
-                        !isVertical && widget.isDraggable ? onDragEnd : null,
+                    !isVertical && widget.isDraggable ? onDragEnd : null,
                     onTapDown: onScrollLineTapDown,
                     onTapUp: onScrollLineTapUp,
-                    child: AnimatedOpacity(
-                      duration: widget.thumbFadeDuration ??
-                          const Duration(milliseconds: 200),
-                      opacity: widget.isAlwaysVisible
-                          ? 1.0
-                          : isThumbNeeded
-                              ? 1.0
-                              : 0.0,
+                    child: fadeAnimationWrapper(
                       child: Container(
                         height: isVertical && isScrollable ? childHeight : null,
                         width: !isVertical && isScrollable ? childWidth : null,
@@ -267,11 +317,11 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                         child: Stack(
                           alignment: isVertical
                               ? isEnd
-                                  ? Alignment.topRight
-                                  : Alignment.topLeft
+                              ? Alignment.topRight
+                              : Alignment.topLeft
                               : isEnd
-                                  ? Alignment.bottomLeft
-                                  : Alignment.topLeft,
+                              ? Alignment.bottomLeft
+                              : Alignment.topLeft,
                           overflow: Overflow.visible,
                           children: [
                             if (widget.scrollLineBuilder != null)
@@ -290,10 +340,23 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                   ),
                 ),
               ),
+              if (hasLabel) scrollLabel,
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget fadeAnimationWrapper({Widget child}) {
+    return AnimatedOpacity(
+      duration: widget.thumbFadeDuration ?? const Duration(milliseconds: 200),
+      opacity: widget.isAlwaysVisible
+          ? 1.0
+          : isThumbNeeded
+          ? 1.0
+          : 0.0,
+      child: child,
     );
   }
 
@@ -304,7 +367,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
       height: isVertical && noThumbBuilder ? thumbMainAxisSize : null,
       width: !isVertical && noThumbBuilder ? thumbMainAxisSize : null,
       color: noThumbBuilder ? Colors.grey.withOpacity(0.8) : null,
-      child: thumbMainAxisSize == null
+      child: !scrollFieldsInitialised
           ? Container()
           : widget.scrollThumbBuilder(scrollInfo),
     );
@@ -312,12 +375,22 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
 
   void calculateScrollAreaFields(Orientation newOrientation) {
     final thumbSize = thumbKey.currentContext.size;
+    final hasScrollLabel = widget.scrollLabelBuilder != null;
+
+    Size scrollLabelSize;
+
+    if (hasScrollLabel) {
+      scrollLabelSize = scrollLabelKey.currentContext.size;
+    }
+
     if (newOrientation != lastOrientation ||
         scrollAxisDirection != widget.controller.position.axisDirection ||
         (thumbSize != previousThumbSize &&
-            widget.scrollLineCrossAxisSize == null)) {
+            widget.scrollLineCrossAxisSize == null) ||
+        (hasScrollLabel && scrollLabelSize != this.scrollLabelSize)) {
       setState(() {
         previousThumbSize = thumbSize;
+        this.scrollLabelSize = scrollLabelSize;
 
         thumbCrossAxisSize = isVertical ? thumbSize.width : thumbSize.height;
 
@@ -327,7 +400,10 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
         isVertical = scrollAxisDirection == AxisDirection.up ||
             scrollAxisDirection == AxisDirection.down;
 
-        childWidth = childWidthByKey ?? MediaQuery.of(context).size.width;
+        childWidth = childWidthByKey ?? MediaQuery
+            .of(context)
+            .size
+            .width;
         childHeight = childHeightByKey ?? MediaQuery.of(context).size.height;
 
         if (viewMaxScrollExtent != 0.0) {
@@ -346,17 +422,22 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
             thumbMainAxisSize = thumbMinSize;
           }
           barMaxScrollExtent = mainAxisScrollAreaSize - thumbMainAxisSize;
-          isThumbNeeded = widget.isAlwaysVisible;
+          if (!scrollFieldsInitialised) {
+            isThumbNeeded = widget.isAlwaysVisible;
+          }
         } else {
           isScrollable = false;
         }
         if (barOffset > 0) {
           final double scrollOffset = widget.controller.offset;
           final double mainAxisSize =
-              isVertical ? childHeightByKey : childWidthByKey;
+          isVertical ? childHeightByKey : childWidthByKey;
           barOffset = mainAxisSize /
               (viewMaxScrollExtent + mainAxisSize) *
               scrollOffset;
+        }
+        if (!scrollFieldsInitialised) {
+          scrollFieldsInitialised = true;
         }
       });
     }

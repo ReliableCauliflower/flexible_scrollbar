@@ -34,6 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final double thumbWidth = 5;
   final double thumbDragWidth = 10;
 
+  final animationDuration = const Duration(milliseconds: 300);
+
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (_, orientation) {
@@ -43,8 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
         body: SafeArea(
           child: FlexibleScrollbar(
             controller: scrollController,
-            isDraggable: false,
-            isJumpOnScrollLineTapped: false,
             scrollThumbBuilder: (ScrollbarInfo info) {
               return AnimatedContainer(
                 width: isVertical
@@ -54,21 +54,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     : info.thumbMainAxisSize ?? 0,
                 height: !isVertical
                     ? info.isDragging
-                        ? thumbDragWidth
-                        : thumbWidth
+                    ? thumbDragWidth
+                    : thumbWidth
                     : info.thumbMainAxisSize ?? 0,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
                 ),
-                duration: const Duration(milliseconds: 300),
+                duration: animationDuration,
+              );
+            },
+            scrollLabelBuilder: (info) {
+              final screenSize = MediaQuery
+                  .of(context)
+                  .size;
+              final double cellSize =
+                  (isVertical ? screenSize.width : screenSize.height) / 3;
+              final int lineNum =
+                  (scrollController.position.pixels ~/ cellSize) + 1;
+              return AnimatedContainer(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                duration: animationDuration,
+                child: Text(
+                  '${isVertical ? 'Row' : 'Column'} #$lineNum',
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
               );
             },
             scrollLineCrossAxisSize: thumbDragWidth,
             barPosition: barPosition,
             child: GridView.builder(
               gridDelegate:
-                  SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+              SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
               controller: scrollController,
               itemCount: 99,
               scrollDirection: scrollDirection,
@@ -76,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 final randomColor = itemsColors[index];
                 return Container(
                   width: double.infinity,
-                  height: 100,
+                  height: double.infinity,
                   color: randomColor,
                   child: Center(
                     child: Text(
