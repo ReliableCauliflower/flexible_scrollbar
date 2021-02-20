@@ -40,19 +40,18 @@ class _HomeScreenState extends State<HomeScreen> {
         body: SafeArea(
           child: FlexibleScrollbar(
             controller: scrollController,
-            isAlwaysVisible: true,
             scrollThumbBuilder: (ScrollbarInfo info) {
               return AnimatedContainer(
                 width: isVertical
                     ? info.isDragging
                         ? info.thumbSize.width
                         : info.thumbSize.width / 2
-                    : info.thumbSize.height,
+                    : info.thumbSize.width,
                 height: !isVertical
                     ? info.isDragging
                         ? info.thumbSize.height
                         : info.thumbSize.height / 2
-                    : info.thumbSize.width,
+                    : info.thumbSize.height,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
