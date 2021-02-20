@@ -1,8 +1,8 @@
 import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:flexible_scrollbar/flexible_scrollbar.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -43,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
         body: SafeArea(
           child: FlexibleScrollbar(
             controller: scrollController,
+            isDraggable: false,
+            isJumpOnScrollLineTapped: false,
             scrollThumbBuilder: (ScrollbarInfo info) {
               return AnimatedContainer(
                 width: isVertical

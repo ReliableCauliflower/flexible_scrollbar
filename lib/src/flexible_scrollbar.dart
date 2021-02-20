@@ -234,7 +234,10 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                       ? widget.scrollLineCrossAxisSize ?? thumbCrossAxisSize
                       : null,
                   child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                    behavior:
+                        widget.isDraggable && widget.isJumpOnScrollLineTapped
+                            ? HitTestBehavior.opaque
+                            : HitTestBehavior.translucent,
                     onVerticalDragStart:
                         isVertical && widget.isDraggable ? onDragStart : null,
                     onVerticalDragUpdate:
