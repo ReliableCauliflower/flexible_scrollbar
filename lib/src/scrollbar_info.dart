@@ -3,13 +3,17 @@ import 'package:flutter/rendering.dart';
 class ScrollbarInfo {
   final bool isScrolling;
   final bool isDragging;
-  final Size thumbSize;
+
+  final double thumbMainAxisSize;
+  final double thumbMainAxisOffset;
+
   final AxisDirection scrollDirection;
 
   ScrollbarInfo({
     this.isScrolling,
     this.isDragging,
     this.scrollDirection,
-    this.thumbSize,
+    this.thumbMainAxisSize,
+    this.thumbMainAxisOffset,
   });
 }

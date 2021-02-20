@@ -31,6 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  final double thumbWidth = 5;
+  final double thumbDragWidth = 10;
+
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (_, orientation) {
@@ -44,14 +47,14 @@ class _HomeScreenState extends State<HomeScreen> {
               return AnimatedContainer(
                 width: isVertical
                     ? info.isDragging
-                        ? info.thumbSize.width
-                        : info.thumbSize.width / 2
-                    : info.thumbSize.width,
+                        ? thumbDragWidth
+                        : thumbWidth
+                    : info.thumbMainAxisSize ?? 0,
                 height: !isVertical
                     ? info.isDragging
-                        ? info.thumbSize.height
-                        : info.thumbSize.height / 2
-                    : info.thumbSize.height,
+                        ? thumbDragWidth
+                        : thumbWidth
+                    : info.thumbMainAxisSize ?? 0,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
@@ -59,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 duration: const Duration(milliseconds: 300),
               );
             },
+            scrollLineCrossAxisSize: thumbDragWidth,
             barPosition: barPosition,
             child: GridView.builder(
               gridDelegate:

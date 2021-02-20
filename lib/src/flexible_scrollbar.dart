@@ -13,20 +13,15 @@ class FlexibleScrollbar extends StatefulWidget {
   final Widget child;
   final ScrollWidgetBuilder scrollThumbBuilder;
   final ScrollWidgetBuilder scrollLineBuilder;
+  final ScrollWidgetBuilder scrollLabelBuilder;
 
-  final bool isAdjustScrollThumb;
   final bool isAlwaysVisible;
   final bool isJumpOnScrollLineTapped;
   final bool isDraggable;
 
-  final double maxScrollViewMainAxisSize;
-  final double maxScrollViewCrossAxisSize;
-  final double scrollLineCrossAxisPositionRatio;
   final double scrollLineOffset;
-  final double thumbMainAxisSize;
-  final double thumbCrossAxisSize;
   final double thumbMainAxisMinSize;
-  final double scrollLineCrossAxisPadding;
+  final double scrollLineCrossAxisSize;
 
   final Duration thumbFadeStartDuration;
   final Duration thumbFadeDuration;
@@ -43,24 +38,19 @@ class FlexibleScrollbar extends StatefulWidget {
     @required this.controller,
     this.scrollThumbBuilder,
     this.scrollLineBuilder,
-    this.maxScrollViewMainAxisSize,
-    this.maxScrollViewCrossAxisSize,
-    this.scrollLineCrossAxisPositionRatio,
+    this.scrollLabelBuilder,
     this.scrollLineOffset,
     this.onDragStart,
     this.onDragEnd,
     this.onDragUpdate,
     this.thumbMainAxisMinSize,
-    this.isAdjustScrollThumb = true,
     this.isAlwaysVisible = false,
     this.isJumpOnScrollLineTapped = true,
     this.isDraggable = true,
-    this.thumbMainAxisSize = 40,
-    this.thumbCrossAxisSize = 10,
     this.thumbFadeStartDuration,
     this.thumbFadeDuration,
     this.barPosition = BarPosition.end,
-    this.scrollLineCrossAxisPadding,
+    this.scrollLineCrossAxisSize,
   })  : assert(child != null),
         assert(controller != null),
         super(key: key);
@@ -70,12 +60,20 @@ class FlexibleScrollbar extends StatefulWidget {
 }
 
 class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
-  final GlobalKey scrollAreaKey = GlobalKey();
+  final GlobalKey childKey = GlobalKey();
+  final GlobalKey thumbKey = GlobalKey();
 
   double barOffset = 0;
   double viewOffset = 0;
   double barMaxScrollExtent;
   double thumbMainAxisSize;
+  double thumbCrossAxisSize = 0;
+  double childWidth;
+  double childHeight;
+  double scrollLineOffset;
+
+  int scrollThumbFadeCountDownCount = 0;
+  int afterJumpScrollEndEventsCount = 0;
 
   bool isDragging = false;
   bool isScrollInProcess = false;
@@ -83,17 +81,19 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   bool isJumpingTo = false;
   bool isJumpTapUp = true;
   bool isScrollable = false;
+  bool isVertical = true;
+  bool needsReCalculate = false;
+  bool isScrollingBeforeJump = false;
 
   AxisDirection scrollAxisDirection;
 
-  double scrollAreaWidth;
-  double scrollAreaHeight;
+  Orientation lastOrientation;
+
+  Size previousThumbSize;
 
   bool get isScrolling => isDragging || isScrollInProcess || !isJumpTapUp;
 
-  bool isVertical = true;
-
-  bool get reverse {
+  bool get isReverse {
     if (isVertical && scrollAxisDirection == AxisDirection.up) {
       return true;
     }
@@ -105,136 +105,255 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
 
   bool get isEnd => widget.barPosition == BarPosition.end;
 
-  int countDownCount = 0;
+  double get mainAxisScrollAreaSize => isVertical ? childHeight : childWidth;
 
-  double get mainAxisScrollAreaSize =>
-      isVertical ? scrollAreaHeight : scrollAreaWidth;
+  double get crossAxisScrollAreaSize => !isVertical ? childHeight : childWidth;
 
-  double get crossAxisScrollAreaSize =>
-      !isVertical ? scrollAreaHeight : scrollAreaWidth;
-
-  double get widthByKey {
-    return scrollAreaKey.currentContext.size.width;
+  double get childWidthByKey {
+    return childKey.currentContext.size.width;
   }
 
-  double get heightByKey {
-    return scrollAreaKey.currentContext.size.height;
+  double get childHeightByKey {
+    return childKey.currentContext.size.height;
   }
 
   double get viewMaxScrollExtent => widget.controller.position.maxScrollExtent;
 
   double get maxExtentToAreaHeightRatio =>
-      (scrollAreaHeight + viewMaxScrollExtent) / scrollAreaHeight;
+      (childHeight + viewMaxScrollExtent) / childHeight;
 
   double get maxExtentToAreaWidthRatio =>
-      (scrollAreaWidth + viewMaxScrollExtent) / scrollAreaWidth;
+      (childWidth + viewMaxScrollExtent) / childWidth;
 
-  bool needsReCalculate = false;
-
-  double getScrollViewDelta(double barDelta) {
-    return barDelta * viewMaxScrollExtent / barMaxScrollExtent;
+  ScrollbarInfo get scrollInfo {
+    return ScrollbarInfo(
+      isScrolling: isScrollInProcess,
+      isDragging: isDragging,
+      thumbMainAxisSize: thumbMainAxisSize,
+      scrollDirection:
+          isScrolling ? widget.controller.position.axisDirection : null,
+      thumbMainAxisOffset: barOffset,
+    );
   }
 
-  double getBarDelta(double scrollViewDelta) {
-    return scrollViewDelta * barMaxScrollExtent / viewMaxScrollExtent;
+  EdgeInsets get thumbOffset {
+    return EdgeInsets.only(
+      top: isVertical && !isReverse ? barOffset : null,
+      bottom: isVertical && isReverse ? barOffset : null,
+      left: !isVertical && !isReverse ? barOffset : null,
+      right: !isVertical && isReverse ? barOffset : null,
+    );
   }
 
-  double scrollLineOffset = 0;
-
-  void onDragStart(DragStartDetails details) {
-    setState(() {
-      isDragging = true;
-    });
-    if (widget.onDragStart != null) {
-      onDragStart(details);
-    }
+  @override
+  void initState() {
+    scrollLineOffset = widget.scrollLineOffset ?? 0;
+    super.initState();
   }
 
-  void onDragEnd(DragEndDetails details) {
-    setState(() {
-      isDragging = false;
-      isJumpTapUp = true;
-    });
-    startHideThumbCountdown();
-    if (widget.onDragEnd != null) {
-      widget.onDragEnd(details);
-    }
-  }
+  @override
+  Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (_, Orientation orientation) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          calculateScrollAreaFields(orientation);
+        });
 
-  void onDragUpdate(DragUpdateDetails details) {
-    setState(() {
-      final double mainAxisCoordinate =
-          isVertical ? details.delta.dy : details.delta.dx;
-
-      barOffset += reverse ? -mainAxisCoordinate : mainAxisCoordinate;
-
-      if (barOffset < 0) {
-        barOffset = 0;
-      }
-      if (barOffset > barMaxScrollExtent) {
-        barOffset = barMaxScrollExtent;
-      }
-
-      double viewDelta = getScrollViewDelta(mainAxisCoordinate);
-
-      viewOffset = widget.controller.position.pixels +
-          (reverse ? -viewDelta : viewDelta);
-      if (viewOffset < widget.controller.position.minScrollExtent) {
-        viewOffset = widget.controller.position.minScrollExtent;
-      }
-      if (viewOffset > viewMaxScrollExtent) {
-        viewOffset = viewMaxScrollExtent;
-      }
-      widget.controller.jumpTo(viewOffset);
-    });
-    if (widget.onDragUpdate != null) {
-      widget.onDragUpdate(details);
-    }
-  }
-
-  bool _isScrollingBeforeJump = false;
-
-  void onScrollLineTapped(TapDownDetails details) {
-    _isScrollingBeforeJump = isScrolling;
-    if (widget.isJumpOnScrollLineTapped) {
-      setState(() {
-        isThumbNeeded = true;
-        isJumpTapUp = false;
-        final mainAxisCoordinate =
-            isVertical ? details.localPosition.dy : details.localPosition.dx;
-
-        if (reverse &&
-            mainAxisCoordinate < mainAxisScrollAreaSize - barOffset &&
-            mainAxisCoordinate >
-                mainAxisScrollAreaSize - (barOffset + thumbMainAxisSize)) {
-          return;
-        } else if (mainAxisCoordinate > barOffset &&
-            mainAxisCoordinate < barOffset + thumbMainAxisSize) {
-          return;
-        }
-
-        double offset;
-        if (reverse) {
-          offset = mainAxisScrollAreaSize -
-              mainAxisCoordinate -
-              (thumbMainAxisSize / 2);
+        Alignment scrollLineAlignment;
+        if (widget.barPosition == BarPosition.start) {
+          if (isReverse) {
+            if (isVertical) {
+              scrollLineAlignment = Alignment.bottomLeft;
+            } else {
+              scrollLineAlignment = Alignment.topRight;
+            }
+          } else {
+            scrollLineAlignment = Alignment.topLeft;
+          }
         } else {
-          offset = mainAxisCoordinate - (thumbMainAxisSize / 2);
+          if (isReverse) {
+            scrollLineAlignment = Alignment.bottomRight;
+          } else {
+            if (isVertical) {
+              scrollLineAlignment = Alignment.topRight;
+            } else {
+              scrollLineAlignment = Alignment.bottomLeft;
+            }
+          }
         }
-        if (offset.isNegative) {
-          offset = 0;
-        } else if (offset + thumbMainAxisSize > mainAxisScrollAreaSize) {
-          offset = mainAxisScrollAreaSize - thumbMainAxisSize;
+
+        return NotificationListener<ScrollNotification>(
+          onNotification: (ScrollNotification notification) {
+            if (notification is ScrollEndNotification) {
+              isScrollInProcess = false;
+              if (isJumpingTo) {
+                if (isScrollingBeforeJump) {
+                  afterJumpScrollEndEventsCount++;
+                  if (afterJumpScrollEndEventsCount == 2) {
+                    isJumpingTo = false;
+                    afterJumpScrollEndEventsCount = 0;
+                  }
+                } else {
+                  isJumpingTo = false;
+                }
+              }
+              startHideThumbCountdown();
+            } else if (notification is ScrollStartNotification) {
+              isScrollInProcess = true;
+              if (!isThumbNeeded) {
+                setState(() {
+                  isThumbNeeded = true;
+                });
+              }
+            }
+            if (isJumpingTo) {
+              return true;
+            }
+            return changePosition(notification);
+          },
+          child: Stack(
+            alignment: scrollLineAlignment,
+            children: <Widget>[
+              Container(
+                key: childKey,
+                child: widget.child,
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                  left: isVertical && !isEnd ? scrollLineOffset : 0,
+                  right: isVertical && isEnd ? scrollLineOffset : 0,
+                  top: !isVertical && !isEnd ? scrollLineOffset : 0,
+                  bottom: !isVertical && isEnd ? scrollLineOffset : 0,
+                ),
+                child: Container(
+                  width: isVertical
+                      ? widget.scrollLineCrossAxisSize ?? thumbCrossAxisSize
+                      : null,
+                  height: !isVertical
+                      ? widget.scrollLineCrossAxisSize ?? thumbCrossAxisSize
+                      : null,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragStart:
+                        isVertical && widget.isDraggable ? onDragStart : null,
+                    onVerticalDragUpdate:
+                        isVertical && widget.isDraggable ? onDragUpdate : null,
+                    onVerticalDragEnd:
+                        isVertical && widget.isDraggable ? onDragEnd : null,
+                    onHorizontalDragStart:
+                        !isVertical && widget.isDraggable ? onDragStart : null,
+                    onHorizontalDragUpdate:
+                        !isVertical && widget.isDraggable ? onDragUpdate : null,
+                    onHorizontalDragEnd:
+                        !isVertical && widget.isDraggable ? onDragEnd : null,
+                    onTapDown: onScrollLineTapDown,
+                    onTapUp: onScrollLineTapUp,
+                    child: AnimatedOpacity(
+                      duration: widget.thumbFadeDuration ??
+                          const Duration(milliseconds: 200),
+                      opacity: widget.isAlwaysVisible
+                          ? 1.0
+                          : isThumbNeeded
+                              ? 1.0
+                              : 0.0,
+                      child: Container(
+                        height: isVertical && isScrollable ? childHeight : null,
+                        width: !isVertical && isScrollable ? childWidth : null,
+                        alignment: scrollLineAlignment,
+                        child: Stack(
+                          alignment: isVertical
+                              ? isEnd
+                                  ? Alignment.topRight
+                                  : Alignment.topLeft
+                              : isEnd
+                                  ? Alignment.bottomLeft
+                                  : Alignment.topLeft,
+                          overflow: Overflow.visible,
+                          children: [
+                            if (widget.scrollLineBuilder != null)
+                              widget.scrollLineBuilder(scrollInfo),
+                            Positioned(
+                              top: thumbOffset.top,
+                              bottom: thumbOffset.bottom,
+                              left: thumbOffset.left,
+                              right: thumbOffset.right,
+                              child: buildScrollThumb(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget buildScrollThumb() {
+    final noThumbBuilder = widget.scrollThumbBuilder == null;
+    return Container(
+      key: thumbKey,
+      height: isVertical && noThumbBuilder ? thumbMainAxisSize : null,
+      width: !isVertical && noThumbBuilder ? thumbMainAxisSize : null,
+      color: noThumbBuilder ? Colors.grey.withOpacity(0.8) : null,
+      child: thumbMainAxisSize == null
+          ? Container()
+          : widget.scrollThumbBuilder(scrollInfo),
+    );
+  }
+
+  void calculateScrollAreaFields(Orientation newOrientation) {
+    final thumbSize = thumbKey.currentContext.size;
+    if (newOrientation != lastOrientation ||
+        scrollAxisDirection != widget.controller.position.axisDirection ||
+        (thumbSize != previousThumbSize &&
+            widget.scrollLineCrossAxisSize == null)) {
+      setState(() {
+        previousThumbSize = thumbSize;
+
+        thumbCrossAxisSize = isVertical ? thumbSize.width : thumbSize.height;
+
+        lastOrientation = newOrientation;
+
+        scrollAxisDirection = widget.controller.position.axisDirection;
+        isVertical = scrollAxisDirection == AxisDirection.up ||
+            scrollAxisDirection == AxisDirection.down;
+
+        childWidth = childWidthByKey ?? MediaQuery.of(context).size.width;
+        childHeight = childHeightByKey ?? MediaQuery.of(context).size.height;
+
+        if (viewMaxScrollExtent != 0.0) {
+          isScrollable = true;
+          double thumbMinSize;
+          if (widget.thumbMainAxisMinSize != null) {
+            thumbMinSize = thumbMinSize;
+          } else {
+            thumbMinSize = mainAxisScrollAreaSize * 0.1;
+          }
+          thumbMainAxisSize = mainAxisScrollAreaSize /
+              (isVertical
+                  ? maxExtentToAreaHeightRatio
+                  : maxExtentToAreaWidthRatio);
+          if (thumbMainAxisSize < thumbMinSize) {
+            thumbMainAxisSize = thumbMinSize;
+          }
+          barMaxScrollExtent = mainAxisScrollAreaSize - thumbMainAxisSize;
+          isThumbNeeded = widget.isAlwaysVisible;
+        } else {
+          isScrollable = false;
         }
-
-        barOffset = offset;
-
-        final maxOffset = mainAxisScrollAreaSize - thumbMainAxisSize;
-        final offsetToSizeRatio = maxOffset / viewMaxScrollExtent;
-
-        final scrollPosition = offset / offsetToSizeRatio;
-        isJumpingTo = true;
-        widget.controller.jumpTo(scrollPosition);
+        if (barOffset > 0) {
+          final double scrollOffset = widget.controller.offset;
+          final double mainAxisSize =
+              isVertical ? childHeightByKey : childWidthByKey;
+          barOffset = mainAxisSize /
+              (viewMaxScrollExtent + mainAxisSize) *
+              scrollOffset;
+        }
       });
     }
   }
@@ -260,261 +379,134 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     return true;
   }
 
-  Orientation lastOrientation;
+  double getBarDelta(double scrollViewDelta) {
+    return scrollViewDelta * barMaxScrollExtent / viewMaxScrollExtent;
+  }
 
-  void calculateScrollAreaFields(Orientation newOrientation) {
-    if (newOrientation != lastOrientation ||
-        scrollAxisDirection != widget.controller.position.axisDirection) {
-      setState(() {
-        scrollLineOffset = widget.scrollLineOffset ?? 0;
-        if (widget.scrollLineCrossAxisPositionRatio != null &&
-            widget.scrollLineCrossAxisPositionRatio >= 0 &&
-            scrollLineOffset == 0) {
-          scrollLineOffset = (crossAxisScrollAreaSize *
-                  widget.scrollLineCrossAxisPositionRatio) -
-              (widget.thumbCrossAxisSize / 2);
+  void onDragStart(DragStartDetails details) {
+    widget.onDragStart?.call(details);
+  }
 
-          final maxOffset = crossAxisScrollAreaSize - widget.thumbCrossAxisSize;
-          if (scrollLineOffset > maxOffset) {
-            scrollLineOffset = maxOffset;
-          }
-        }
+  void onDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      final double mainAxisCoordinate =
+          isVertical ? details.delta.dy : details.delta.dx;
 
-        lastOrientation = newOrientation;
-        final double width = widthByKey;
-        final double height = heightByKey;
-        scrollAxisDirection = widget.controller.position.axisDirection;
-        isVertical = scrollAxisDirection == AxisDirection.up ||
-            scrollAxisDirection == AxisDirection.down;
+      barOffset += isReverse ? -mainAxisCoordinate : mainAxisCoordinate;
 
-        if (isVertical) {
-          scrollAreaWidth = widget.maxScrollViewCrossAxisSize ??
-              width ??
-              MediaQuery.of(context).size.width;
-          scrollAreaHeight = widget.maxScrollViewMainAxisSize ??
-              height ??
-              MediaQuery.of(context).size.height;
-        } else {
-          scrollAreaWidth = widget.maxScrollViewMainAxisSize ??
-              width ??
-              MediaQuery.of(context).size.width;
-          scrollAreaHeight = widget.maxScrollViewCrossAxisSize ??
-              height ??
-              MediaQuery.of(context).size.height;
-        }
-        if (viewMaxScrollExtent != 0.0) {
-          isScrollable = true;
-          if (widget.isAdjustScrollThumb) {
-            double thumbMinSize;
-            if (widget.thumbMainAxisMinSize != null) {
-              thumbMinSize = thumbMinSize;
-            } else {
-              thumbMinSize = mainAxisScrollAreaSize * 0.1;
-            }
-            thumbMainAxisSize = mainAxisScrollAreaSize /
-                (isVertical
-                    ? maxExtentToAreaHeightRatio
-                    : maxExtentToAreaWidthRatio);
-            if (thumbMainAxisSize < thumbMinSize) {
-              thumbMainAxisSize = thumbMinSize;
-            }
-          } else {
-            thumbMainAxisSize = widget.thumbMainAxisSize;
-          }
-          barMaxScrollExtent = mainAxisScrollAreaSize - thumbMainAxisSize;
-          isThumbNeeded = widget.isAlwaysVisible;
-        } else {
-          isScrollable = false;
-        }
-        if (barOffset > 0) {
-          final double scrollOffset = widget.controller.offset;
-          final double mainAxisSize = isVertical ? heightByKey : widthByKey;
-          barOffset = mainAxisSize /
-              (viewMaxScrollExtent + mainAxisSize) *
-              scrollOffset;
-        }
-      });
+      if (barOffset < 0) {
+        barOffset = 0;
+      }
+      if (barOffset > barMaxScrollExtent) {
+        barOffset = barMaxScrollExtent;
+      }
+
+      double viewDelta = getScrollViewDelta(mainAxisCoordinate);
+
+      viewOffset = widget.controller.position.pixels +
+          (isReverse ? -viewDelta : viewDelta);
+      if (viewOffset < widget.controller.position.minScrollExtent) {
+        viewOffset = widget.controller.position.minScrollExtent;
+      }
+      if (viewOffset > viewMaxScrollExtent) {
+        viewOffset = viewMaxScrollExtent;
+      }
+      widget.controller.jumpTo(viewOffset);
+    });
+    if (widget.onDragUpdate != null) {
+      widget.onDragUpdate(details);
     }
+  }
+
+  void onDragEnd(DragEndDetails details) {
+    setState(() {
+      isJumpTapUp = true;
+      if (isDragging) {
+        isDragging = false;
+      }
+    });
+    startHideThumbCountdown();
+    widget.onDragEnd?.call(details);
   }
 
   void startHideThumbCountdown() {
     if (widget.isAlwaysVisible) {
       return;
     }
-    final currentCountdownNumber = ++countDownCount;
+    final currentCountdownNumber = ++scrollThumbFadeCountDownCount;
     Future.delayed(
         widget.thumbFadeStartDuration ?? const Duration(milliseconds: 1000),
         () {
-      if (currentCountdownNumber == countDownCount && !isScrolling && mounted) {
+      if (currentCountdownNumber == scrollThumbFadeCountDownCount &&
+          !isScrolling &&
+          mounted) {
         setState(() {
           isThumbNeeded = false;
-          countDownCount = 0;
+          scrollThumbFadeCountDownCount = 0;
         });
       }
     });
   }
 
-  ScrollbarInfo get scrollInfo {
-    return ScrollbarInfo(
-      isScrolling: isScrollInProcess,
-      isDragging: isDragging,
-      thumbSize: Size(
-        isVertical ? widget.thumbCrossAxisSize : thumbMainAxisSize ?? 0,
-        isVertical ? thumbMainAxisSize ?? 0 : widget.thumbCrossAxisSize,
-      ),
-      scrollDirection:
-          isScrolling ? widget.controller.position.axisDirection : null,
-    );
+  double getScrollViewDelta(double barDelta) {
+    return barDelta * viewMaxScrollExtent / barMaxScrollExtent;
   }
 
-  int _afterJumpEventsCount = 0;
+  void onScrollLineTapDown(TapDownDetails details) {
+    isScrollingBeforeJump = isScrolling;
+    if (widget.isJumpOnScrollLineTapped) {
+      setState(() {
+        isThumbNeeded = true;
+        isJumpTapUp = false;
+        if (widget.isDraggable) {
+          isDragging = true;
+        }
+        final mainAxisCoordinate =
+            isVertical ? details.localPosition.dy : details.localPosition.dx;
 
-  @override
-  Widget build(BuildContext context) {
-    return OrientationBuilder(builder: (_, Orientation orientation) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        calculateScrollAreaFields(orientation);
+        if (isReverse &&
+            mainAxisCoordinate < mainAxisScrollAreaSize - barOffset &&
+            mainAxisCoordinate >
+                mainAxisScrollAreaSize - (barOffset + thumbMainAxisSize)) {
+          return;
+        } else if (mainAxisCoordinate > barOffset &&
+            mainAxisCoordinate < barOffset + thumbMainAxisSize) {
+          return;
+        }
+
+        double offset;
+        if (isReverse) {
+          offset = mainAxisScrollAreaSize -
+              mainAxisCoordinate -
+              (thumbMainAxisSize / 2);
+        } else {
+          offset = mainAxisCoordinate - (thumbMainAxisSize / 2);
+        }
+        if (offset.isNegative) {
+          offset = 0;
+        } else if (offset + thumbMainAxisSize > mainAxisScrollAreaSize) {
+          offset = mainAxisScrollAreaSize - thumbMainAxisSize;
+        }
+
+        barOffset = offset;
+
+        final maxOffset = mainAxisScrollAreaSize - thumbMainAxisSize;
+        final offsetToSizeRatio = maxOffset / viewMaxScrollExtent;
+
+        final scrollPosition = offset / offsetToSizeRatio;
+        isJumpingTo = true;
+        widget.controller.jumpTo(scrollPosition);
       });
-
-      Alignment scrollLineAlignment;
-      if (widget.barPosition == BarPosition.start) {
-        if (reverse) {
-          if (isVertical) {
-            scrollLineAlignment = Alignment.bottomLeft;
-          } else {
-            scrollLineAlignment = Alignment.topRight;
-          }
-        } else {
-          scrollLineAlignment = Alignment.topLeft;
-        }
-      } else {
-        if (reverse) {
-          scrollLineAlignment = Alignment.bottomRight;
-        } else {
-          if (isVertical) {
-            scrollLineAlignment = Alignment.topRight;
-          } else {
-            scrollLineAlignment = Alignment.bottomLeft;
-          }
-        }
-      }
-
-      final double crossAxisPadding = widget.scrollLineCrossAxisPadding ?? 0;
-      return NotificationListener<ScrollNotification>(
-        key: scrollAreaKey,
-        onNotification: (ScrollNotification notification) {
-          if (notification is ScrollEndNotification) {
-            isScrollInProcess = false;
-            if (isJumpingTo) {
-              if (_isScrollingBeforeJump) {
-                _afterJumpEventsCount++;
-                if (_afterJumpEventsCount == 2) {
-                  isJumpingTo = false;
-                  _afterJumpEventsCount = 0;
-                }
-              } else {
-                isJumpingTo = false;
-              }
-            }
-            startHideThumbCountdown();
-          } else if (notification is ScrollStartNotification) {
-            isScrollInProcess = true;
-            if (!isThumbNeeded) {
-              setState(() {
-                isThumbNeeded = true;
-              });
-            }
-          }
-          if (isJumpingTo) {
-            return true;
-          }
-          return changePosition(notification);
-        },
-        child: Stack(
-          alignment: scrollLineAlignment,
-          children: <Widget>[
-            widget.child,
-            Padding(
-              padding: EdgeInsets.only(
-                left: isVertical && !isEnd ? scrollLineOffset : 0,
-                right: isVertical && isEnd ? scrollLineOffset : 0,
-                top: !isVertical && !isEnd ? scrollLineOffset : 0,
-                bottom: !isVertical && isEnd ? scrollLineOffset : 0,
-              ),
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onVerticalDragStart:
-                    isVertical && widget.isDraggable ? onDragStart : null,
-                onVerticalDragUpdate:
-                    isVertical && widget.isDraggable ? onDragUpdate : null,
-                onVerticalDragEnd:
-                    isVertical && widget.isDraggable ? onDragEnd : null,
-                onHorizontalDragStart:
-                    !isVertical && widget.isDraggable ? onDragStart : null,
-                onHorizontalDragUpdate:
-                    !isVertical && widget.isDraggable ? onDragUpdate : null,
-                onHorizontalDragEnd:
-                    !isVertical && widget.isDraggable ? onDragEnd : null,
-                onTapDown: onScrollLineTapped,
-                onTapUp: (TapUpDetails details) {
-                  startHideThumbCountdown();
-                  isJumpTapUp = true;
-                },
-                child: AnimatedOpacity(
-                  duration: widget.thumbFadeDuration ??
-                      const Duration(milliseconds: 200),
-                  opacity: widget.isAlwaysVisible
-                      ? 1.0
-                      : isThumbNeeded
-                          ? 1.0
-                          : 0.0,
-                  child: Container(
-                    height: isVertical
-                        ? isScrollable
-                            ? scrollAreaHeight
-                            : null
-                        : widget.thumbCrossAxisSize + 2 * crossAxisPadding,
-                    width: isVertical
-                        ? widget.thumbCrossAxisSize + 2 * crossAxisPadding
-                        : isScrollable
-                            ? scrollAreaWidth
-                            : null,
-                    alignment: scrollLineAlignment,
-                    child: Stack(
-                      alignment: isVertical
-                          ? Alignment.topCenter
-                          : Alignment.centerLeft,
-                      overflow: Overflow.visible,
-                      children: [
-                        if (widget.scrollLineBuilder != null)
-                          widget.scrollLineBuilder(scrollInfo),
-                        Positioned(
-                          top: isVertical && !reverse ? barOffset : null,
-                          bottom: isVertical && reverse ? barOffset : null,
-                          left: !isVertical && !reverse ? barOffset : null,
-                          right: !isVertical && reverse ? barOffset : null,
-                          child: buildScrollThumb(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
+    }
   }
 
-  Widget buildScrollThumb() {
-    return Container(
-      height: isVertical ? thumbMainAxisSize : null,
-      width: isVertical ? null : thumbMainAxisSize,
-      color: widget.scrollThumbBuilder == null
-          ? Colors.grey.withOpacity(0.8)
-          : null,
-      child: widget.scrollThumbBuilder(scrollInfo),
-    );
+  void onScrollLineTapUp(TapUpDetails details) {
+    startHideThumbCountdown();
+    isJumpTapUp = true;
+    if (isDragging) {
+      setState(() {
+        isDragging = false;
+      });
+    }
   }
 }
