@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: FlexibleScrollbar(
             controller: scrollController,
             isAlwaysVisible: true,
-            scrollThumb: (ScrollbarInfo info) {
+            scrollThumbBuilder: (ScrollbarInfo info) {
               return AnimatedContainer(
                 width: isVertical
                     ? info.isDragging

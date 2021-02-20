@@ -11,8 +11,8 @@ class FlexibleScrollbar extends StatefulWidget {
   final ScrollController controller;
 
   final Widget child;
-  final ScrollWidgetBuilder scrollThumb;
-  final ScrollWidgetBuilder scrollLine;
+  final ScrollWidgetBuilder scrollThumbBuilder;
+  final ScrollWidgetBuilder scrollLineBuilder;
 
   final bool isAdjustScrollThumb;
   final bool isAlwaysVisible;
@@ -41,8 +41,8 @@ class FlexibleScrollbar extends StatefulWidget {
     Key key,
     @required this.child,
     @required this.controller,
-    this.scrollThumb,
-    this.scrollLine,
+    this.scrollThumbBuilder,
+    this.scrollLineBuilder,
     this.maxScrollViewMainAxisSize,
     this.maxScrollViewCrossAxisSize,
     this.scrollLineCrossAxisPositionRatio,
@@ -469,8 +469,8 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                           : Alignment.centerLeft,
                       overflow: Overflow.visible,
                       children: [
-                        if (widget.scrollLine != null)
-                          widget.scrollLine(scrollInfo),
+                        if (widget.scrollLineBuilder != null)
+                          widget.scrollLineBuilder(scrollInfo),
                         Positioned(
                           top: isVertical && !reverse ? barOffset : null,
                           bottom: isVertical && reverse ? barOffset : null,
@@ -494,8 +494,8 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     return Container(
       height: isVertical ? thumbMainAxisSize : null,
       width: isVertical ? null : thumbMainAxisSize,
-      color: widget.scrollThumb == null ? Colors.grey.withOpacity(0.8) : null,
-      child: widget.scrollThumb(scrollInfo),
+      color: widget.scrollThumbBuilder == null ? Colors.grey.withOpacity(0.8) : null,
+      child: widget.scrollThumbBuilder(scrollInfo),
     );
   }
 }
