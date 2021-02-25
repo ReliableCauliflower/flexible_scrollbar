@@ -124,7 +124,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     return childKey.currentContext.size.height;
   }
 
-  double get viewMaxScrollExtent => widget.controller.position.maxScrollExtent;
+  double viewMaxScrollExtent;
 
   double get maxExtentToAreaHeightRatio =>
       (childHeight + viewMaxScrollExtent) / childHeight;
@@ -207,7 +207,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
         scrollLabel = Positioned(
           top: !isVertical && !isEnd ? offset.top : adjustedThumbOffset.top,
           bottom:
-              !isVertical && isEnd ? offset.bottom : adjustedThumbOffset.bottom,
+          !isVertical && isEnd ? offset.bottom : adjustedThumbOffset.bottom,
           left: isVertical && !isEnd ? offset.left : adjustedThumbOffset.left,
           right: isVertical && isEnd ? offset.right : adjustedThumbOffset.right,
           child: scrollLabel,
@@ -387,7 +387,8 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
         scrollAxisDirection != widget.controller.position.axisDirection ||
         (thumbSize != previousThumbSize &&
             widget.scrollLineCrossAxisSize == null) ||
-        (hasScrollLabel && scrollLabelSize != this.scrollLabelSize)) {
+        (hasScrollLabel && scrollLabelSize != this.scrollLabelSize) ||
+        widget.controller.position.maxScrollExtent != viewMaxScrollExtent) {
       setState(() {
         previousThumbSize = thumbSize;
         this.scrollLabelSize = scrollLabelSize;
@@ -404,7 +405,12 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
             .of(context)
             .size
             .width;
-        childHeight = childHeightByKey ?? MediaQuery.of(context).size.height;
+        childHeight = childHeightByKey ?? MediaQuery
+            .of(context)
+            .size
+            .height;
+
+        viewMaxScrollExtent = widget.controller.position.maxScrollExtent;
 
         if (viewMaxScrollExtent != 0.0) {
           isScrollable = true;
@@ -475,7 +481,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   void onDragUpdate(DragUpdateDetails details) {
     setState(() {
       final double mainAxisCoordinate =
-          isVertical ? details.delta.dy : details.delta.dx;
+      isVertical ? details.delta.dy : details.delta.dx;
 
       barOffset += isReverse ? -mainAxisCoordinate : mainAxisCoordinate;
 
@@ -521,16 +527,16 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     final currentCountdownNumber = ++scrollThumbFadeCountDownCount;
     Future.delayed(
         widget.thumbFadeStartDuration ?? const Duration(milliseconds: 1000),
-        () {
-      if (currentCountdownNumber == scrollThumbFadeCountDownCount &&
-          !isScrolling &&
-          mounted) {
-        setState(() {
-          isThumbNeeded = false;
-          scrollThumbFadeCountDownCount = 0;
+            () {
+          if (currentCountdownNumber == scrollThumbFadeCountDownCount &&
+              !isScrolling &&
+              mounted) {
+            setState(() {
+              isThumbNeeded = false;
+              scrollThumbFadeCountDownCount = 0;
+            });
+          }
         });
-      }
-    });
   }
 
   double getScrollViewDelta(double barDelta) {
@@ -547,7 +553,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
           isDragging = true;
         }
         final mainAxisCoordinate =
-            isVertical ? details.localPosition.dy : details.localPosition.dx;
+        isVertical ? details.localPosition.dy : details.localPosition.dx;
 
         if (isReverse &&
             mainAxisCoordinate < mainAxisScrollAreaSize - barOffset &&
