@@ -10,10 +10,10 @@ class ScrollbarInfo {
   final AxisDirection scrollDirection;
 
   ScrollbarInfo({
-    this.isScrolling,
-    this.isDragging,
-    this.scrollDirection,
-    this.thumbMainAxisSize,
-    this.thumbMainAxisOffset,
+    required this.isScrolling,
+    required this.isDragging,
+    required this.scrollDirection,
+    required this.thumbMainAxisSize,
+    required this.thumbMainAxisOffset,
   });
 }
