@@ -51,12 +51,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? info.isDragging
                         ? thumbDragWidth
                         : thumbWidth
-                    : info.thumbMainAxisSize ?? 0,
+                    : info.thumbMainAxisSize,
                 height: !isVertical
                     ? info.isDragging
-                    ? thumbDragWidth
-                    : thumbWidth
-                    : info.thumbMainAxisSize ?? 0,
+                        ? thumbDragWidth
+                        : thumbWidth
+                    : info.thumbMainAxisSize,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
@@ -65,9 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             scrollLabelBuilder: (info) {
-              final screenSize = MediaQuery
-                  .of(context)
-                  .size;
+              final screenSize = MediaQuery.of(context).size;
               final double cellSize =
                   (isVertical ? screenSize.width : screenSize.height) / 3;
               final int lineNum =
@@ -91,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
             barPosition: barPosition,
             child: GridView.builder(
               gridDelegate:
-              SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                  SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
               controller: scrollController,
               itemCount: 99,
               scrollDirection: scrollDirection,
