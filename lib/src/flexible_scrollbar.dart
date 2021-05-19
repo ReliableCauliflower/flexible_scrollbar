@@ -16,9 +16,9 @@ class FlexibleScrollbar extends StatefulWidget {
   final ScrollWidgetBuilder? scrollLineBuilder;
   final ScrollWidgetBuilder? scrollLabelBuilder;
 
-  final bool isAlwaysVisible;
-  final bool isJumpOnScrollLineTapped;
-  final bool isDraggable;
+  final bool alwaysVisible;
+  final bool jumpOnScrollLineTapped;
+  final bool draggable;
   final bool autoPositionLabel;
 
   final double? scrollLineOffset;
@@ -51,9 +51,9 @@ class FlexibleScrollbar extends StatefulWidget {
     this.thumbFadeDuration,
     this.scrollLineCrossAxisSize,
     this.barPosition = BarPosition.end,
-    this.isAlwaysVisible = false,
-    this.isJumpOnScrollLineTapped = true,
-    this.isDraggable = true,
+    this.alwaysVisible = false,
+    this.jumpOnScrollLineTapped = true,
+    this.draggable = true,
     this.autoPositionLabel = true,
     this.scrollLabelOffset = 4,
   }) : super(key: key);
@@ -72,6 +72,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   double barOffset = 0;
   double viewOffset = 0;
   double thumbCrossAxisSize = 0;
+  double defaultThumbCrossAxisSize = 8;
 
   double? barMaxScrollExtent;
   double? thumbMainAxisSize;
@@ -294,22 +295,21 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                   width: isVertical ? scrollLineCrossAxisSize : null,
                   height: !isVertical ? scrollLineCrossAxisSize : null,
                   child: GestureDetector(
-                    behavior:
-                        widget.isDraggable && widget.isJumpOnScrollLineTapped
-                            ? HitTestBehavior.opaque
-                            : HitTestBehavior.translucent,
+                    behavior: widget.draggable && widget.jumpOnScrollLineTapped
+                        ? HitTestBehavior.opaque
+                        : HitTestBehavior.translucent,
                     onVerticalDragStart:
-                        isVertical && widget.isDraggable ? onDragStart : null,
+                        isVertical && widget.draggable ? onDragStart : null,
                     onVerticalDragUpdate:
-                        isVertical && widget.isDraggable ? onDragUpdate : null,
+                        isVertical && widget.draggable ? onDragUpdate : null,
                     onVerticalDragEnd:
-                        isVertical && widget.isDraggable ? onDragEnd : null,
+                        isVertical && widget.draggable ? onDragEnd : null,
                     onHorizontalDragStart:
-                        !isVertical && widget.isDraggable ? onDragStart : null,
+                        !isVertical && widget.draggable ? onDragStart : null,
                     onHorizontalDragUpdate:
-                        !isVertical && widget.isDraggable ? onDragUpdate : null,
+                        !isVertical && widget.draggable ? onDragUpdate : null,
                     onHorizontalDragEnd:
-                        !isVertical && widget.isDraggable ? onDragEnd : null,
+                        !isVertical && widget.draggable ? onDragEnd : null,
                     onTapDown: onScrollLineTapDown,
                     onTapUp: onScrollLineTapUp,
                     child: fadeAnimationWrapper(
@@ -354,7 +354,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   Widget fadeAnimationWrapper({required Widget child}) {
     return AnimatedOpacity(
       duration: widget.thumbFadeDuration ?? const Duration(milliseconds: 200),
-      opacity: widget.isAlwaysVisible
+      opacity: widget.alwaysVisible
           ? 1.0
           : isThumbNeeded
               ? 1.0
@@ -365,14 +365,17 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
 
   Widget buildScrollThumb() {
     final noThumbBuilder = widget.scrollThumbBuilder == null;
+    final double? mainAxisSize = noThumbBuilder ? thumbMainAxisSize : null;
+    final double? crossAxisSize =
+        noThumbBuilder ? defaultThumbCrossAxisSize : null;
     return Container(
       key: thumbKey,
-      height: isVertical && noThumbBuilder ? thumbMainAxisSize : null,
-      width: !isVertical && noThumbBuilder ? thumbMainAxisSize : null,
-      color: noThumbBuilder ? Colors.grey.withOpacity(0.8) : null,
+      height: isVertical ? mainAxisSize : crossAxisSize,
+      width: isVertical ? crossAxisSize : mainAxisSize,
+      color: noThumbBuilder ? Colors.black.withOpacity(0.6) : null,
       child: !scrollFieldsInitialised
-          ? Container()
-          : widget.scrollThumbBuilder!(scrollInfo),
+          ? null
+          : widget.scrollThumbBuilder?.call(scrollInfo) ?? Container(),
     );
   }
 
@@ -426,7 +429,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
           }
           barMaxScrollExtent = mainAxisScrollAreaSize! - thumbMainAxisSize!;
           if (!scrollFieldsInitialised) {
-            isThumbNeeded = widget.isAlwaysVisible;
+            isThumbNeeded = widget.alwaysVisible;
           }
         } else {
           isScrollable = false;
@@ -518,7 +521,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   }
 
   void startHideThumbCountdown() {
-    if (widget.isAlwaysVisible) {
+    if (widget.alwaysVisible) {
       return;
     }
     final currentCountdownNumber = ++scrollThumbFadeCountDownCount;
@@ -542,11 +545,11 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
 
   void onScrollLineTapDown(TapDownDetails details) {
     isScrollingBeforeJump = isScrolling;
-    if (widget.isJumpOnScrollLineTapped) {
+    if (widget.jumpOnScrollLineTapped) {
       setState(() {
         isThumbNeeded = true;
         isJumpTapUp = false;
-        if (widget.isDraggable) {
+        if (widget.draggable) {
           isDragging = true;
         }
         final mainAxisCoordinate =
