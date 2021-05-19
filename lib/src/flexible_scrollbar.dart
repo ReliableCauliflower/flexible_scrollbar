@@ -31,9 +31,9 @@ class FlexibleScrollbar extends StatefulWidget {
 
   final BarPosition barPosition;
 
-  final Function(DragStartDetails details)? onDragStart;
-  final Function(DragEndDetails details)? onDragEnd;
-  final Function(DragUpdateDetails details)? onDragUpdate;
+  final ValueChanged<DragStartDetails>? onDragStart;
+  final ValueChanged<DragEndDetails>? onDragEnd;
+  final ValueChanged<DragUpdateDetails>? onDragUpdate;
 
   FlexibleScrollbar({
     Key? key,
