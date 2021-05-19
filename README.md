@@ -1,6 +1,6 @@
-[![pub package](https://img.shields.io/pub/v/flexible_scrollbar)](https://pub.dartlang.org/packages/flexible_scrollbar)
-
 # A Flexible Scrollbar for Flutter
+[![pub package](https://img.shields.io/pub/v/flexible_scrollbar)](https://pub.dartlang.org/packages/flexible_scrollbar)
+</br>
 A flexible solution for custom scroll bars.
 
 ![](https://user-images.githubusercontent.com/46086231/118855133-2355ad00-b8de-11eb-992f-6f3e726ef507.gif)
@@ -19,6 +19,10 @@ To install this package simply add the `flexible_scrollbar` to your dependencies
 # pubspec.yaml
 dependencies:
   flexible_scrollbar:
+```
+
+```dart
+import 'package:flexible_scrollbar/flexible_scrollbar.dart';
 ```
 ## Basic usage
 
