@@ -42,76 +42,74 @@ class _HomeScreenState extends State<HomeScreen> {
       final bool isVertical = orientation == Orientation.portrait;
       scrollDirection = isVertical ? Axis.vertical : Axis.horizontal;
       return Scaffold(
-        body: SafeArea(
-          child: FlexibleScrollbar(
+        body: FlexibleScrollbar(
+          controller: scrollController,
+          scrollThumbBuilder: (ScrollbarInfo info) {
+            return AnimatedContainer(
+              width: isVertical
+                  ? info.isDragging
+                      ? thumbDragWidth
+                      : thumbWidth
+                  : info.thumbMainAxisSize,
+              height: !isVertical
+                  ? info.isDragging
+                      ? thumbDragWidth
+                      : thumbWidth
+                  : info.thumbMainAxisSize,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
+              ),
+              duration: animationDuration,
+            );
+          },
+          scrollLabelBuilder: (info) {
+            final screenSize = MediaQuery.of(context).size;
+            final double cellSize =
+                (isVertical ? screenSize.width : screenSize.height) / 3;
+            final int lineNum =
+                (scrollController.position.pixels ~/ cellSize) + 1;
+            return AnimatedContainer(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              duration: animationDuration,
+              child: Text(
+                '${isVertical ? 'Row' : 'Column'} #$lineNum',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            );
+          },
+          scrollLineCrossAxisSize: thumbDragWidth,
+          barPosition: barPosition,
+          child: GridView.builder(
+            gridDelegate:
+                SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
             controller: scrollController,
-            scrollThumbBuilder: (ScrollbarInfo info) {
-              return AnimatedContainer(
-                width: isVertical
-                    ? info.isDragging
-                        ? thumbDragWidth
-                        : thumbWidth
-                    : info.thumbMainAxisSize,
-                height: !isVertical
-                    ? info.isDragging
-                        ? thumbDragWidth
-                        : thumbWidth
-                    : info.thumbMainAxisSize,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
-                ),
-                duration: animationDuration,
-              );
-            },
-            scrollLabelBuilder: (info) {
-              final screenSize = MediaQuery.of(context).size;
-              final double cellSize =
-                  (isVertical ? screenSize.width : screenSize.height) / 3;
-              final int lineNum =
-                  (scrollController.position.pixels ~/ cellSize) + 1;
-              return AnimatedContainer(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(info.isDragging ? 1 : 0.6),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                duration: animationDuration,
-                child: Text(
-                  '${isVertical ? 'Row' : 'Column'} #$lineNum',
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                ),
-              );
-            },
-            scrollLineCrossAxisSize: thumbDragWidth,
-            barPosition: barPosition,
-            child: GridView.builder(
-              gridDelegate:
-                  SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-              controller: scrollController,
-              itemCount: 99,
-              scrollDirection: scrollDirection,
-              itemBuilder: (context, int index) {
-                final randomColor = itemsColors[index];
-                return Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  color: randomColor,
-                  child: Center(
-                    child: Text(
-                      (++index).toString(),
-                      style: TextStyle(
-                        color: randomColor.computeLuminance() > 0.5
-                            ? Colors.black
-                            : Colors.white,
-                      ),
+            itemCount: 99,
+            scrollDirection: scrollDirection,
+            itemBuilder: (context, int index) {
+              final randomColor = itemsColors[index];
+              return Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: randomColor,
+                child: Center(
+                  child: Text(
+                    (++index).toString(),
+                    style: TextStyle(
+                      color: randomColor.computeLuminance() > 0.5
+                          ? Colors.black
+                          : Colors.white,
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
         floatingActionButton: FloatingActionButton(
