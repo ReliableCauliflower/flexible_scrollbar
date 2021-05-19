@@ -33,7 +33,7 @@ FlexibleScrollbar(
 You will get a defaul scroll thumb and settings:</br>
 ![](https://user-images.githubusercontent.com/46086231/118859755-433b9f80-b8e3-11eb-952a-236cfe5d277c.png)
 
-But it's very simple and can be made by default means, and we are here to make complex scroll bars so let's see how.
+But it's very simple and we are here to make complex scroll bars so let's see how.
 
 ## Customization
 
