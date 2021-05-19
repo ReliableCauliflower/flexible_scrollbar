@@ -66,3 +66,29 @@ scrollThumbBuilder: (ScrollbarInfo info) {
      );
 },
 ```
+
+### Other parameters
+
+There is some more customization that you can do with the other than builders properties of the `FlexibleScrollbar`:
+
+|  Properties  |   Description   |
+|--------------|-----------------|
+| `bool alwaysVisible` | Default value is `false`. If `true` prevents the scroll thumb from disappearing after the set time. |
+| `bool jumpOnScrollLineTapped` | Default value is `true`. If `false` prevents the scroll position change on the scroll line tap. |
+| `bool draggable` | Default value is `true`. If `false` prevents user from dragging the scroll thumb. |
+| `bool autoPositionLabel` | Default value is `true`. If `false` the label is set to (0, 0) position and can be moved using Positioned widget. |
+| `double? scrollLineOffset` | The offset in pixels of the scroll line from the side defined by the `barPosition` and the scroll direction. |
+| `double? thumbMainAxisMinSize` | The minimal size of the scroll thumb in case you are using the `ScrollbarInfo` `thumbMainAxisSize` and the scroll body is too big. |
+| `double? scrollLineCrossAxisSize` | The cross axis size of the scroll line. Defaults to the scroll thumb size. The scroll thumb cross axis size can not be bigger then this field. |
+| `double? scrollLabelOffset` | The offset in pixels of the label from the side defined by the `barPosition` and the scroll direction. |
+| `Duration? thumbFadeStartDuration` | Defines the time after which the scroll thumb will start its fade animation. |
+| `Duration? thumbFadeDuration` | The time that takes the scroll thumb to completely fade. |
+| `BarPosition barPosition` | Defines whether the scroll line position at the `start` or the `end` of the scroll body cross axis. |
+| `ValueChanged<DragStartDetails>? onDragStart` | This callback is called when the user starts dragging the scroll thumb. |
+| `ValueChanged<DragEndDetails>? onDragEnd` | This callback is called when the user ends dragging the scroll thumb. |
+| `ValueChanged<DragUpdateDetails>? onDragUpdate` | This callback is called during the user's scroll thumb drag process. |
+
+<br>
+
+## License
+This package is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
