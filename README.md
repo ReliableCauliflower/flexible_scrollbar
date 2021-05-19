@@ -46,7 +46,7 @@ For the main customization the `FlexibleScrollbar` widget has three builders: `s
 | `bool isScrolling` | Changes when the user starts/strops the scroll body scrolling. The `isDragging` is not affected by it. |
 | `bool isDragging` | Changes when the user starts/strops to drag the scroll thumb. The `isScrolling` is not affected by it. |
 | `double thumbMainAxisSize` | Contains the calculated depending on the scroll body size thumb length. |
-| `double thumbMainAxisOffset` | Contains the offset in pixels of the scrollthumb from the starting position. |
+| `double thumbMainAxisOffset` | Contains the offset in pixels of the scroll thumb from the starting position. |
 | `AxisDirection scrollDirection` | Has the scroll body scroll direction in it (`up`/`down`/`left`/`right`) |
 </br>
 Using those builders you can make custom scrollbars such as the one shown in the example at the beginning. The scroll thumb from the example has been created with the following code:

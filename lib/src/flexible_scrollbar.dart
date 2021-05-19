@@ -9,30 +9,65 @@ import 'package:flutter/rendering.dart';
 typedef ScrollWidgetBuilder = Widget Function(ScrollbarInfo);
 
 class FlexibleScrollbar extends StatefulWidget {
+  /// The scroll controller of the scrollable widget
   final ScrollController controller;
 
   final Widget child;
+
   final ScrollWidgetBuilder? scrollThumbBuilder;
   final ScrollWidgetBuilder? scrollLineBuilder;
   final ScrollWidgetBuilder? scrollLabelBuilder;
 
+  /// Default value is false. If true prevents the scroll thumb from
+  /// disappearing after the set time
   final bool alwaysVisible;
+
+  /// Default value is true. If false prevents the scroll position change on
+  /// the scroll line tap
   final bool jumpOnScrollLineTapped;
+
+  /// Default value is true. If false prevents user from dragging the scroll
+  /// thumb
   final bool draggable;
+
+  /// Default value is true. If false the label is set to (0, 0) position and
+  /// can be moved using Positioned widget
   final bool autoPositionLabel;
 
+  /// The offset in pixels of the scroll line from the side defined by the
+  /// barPosition and the scroll direction
   final double? scrollLineOffset;
+
+  /// The minimal size of the scroll thumb in case you are using the
+  /// ScrollbarInfo thumbMainAxisSize and the scroll body is too big
   final double? thumbMainAxisMinSize;
+
+  /// The cross axis size of the scroll line. Defaults to the scroll thumb
+  /// size. The scroll thumb cross axis size can not be bigger then this field
   final double? scrollLineCrossAxisSize;
+
+  /// The offset in pixels of the label from the side defined by the
+  /// barPosition and the scroll direction
   final double scrollLabelOffset;
 
+  /// Defines the time after which the scroll thumb will start its fade
+  /// animation
   final Duration? thumbFadeStartDuration;
+
+  /// The time that takes the scroll thumb to completely fade
   final Duration? thumbFadeDuration;
 
+  /// Defines whether the scroll line position at the start or the end of
+  /// the scroll body cross axis
   final BarPosition barPosition;
 
+  /// This callback is called when the user starts dragging the scroll thumb
   final ValueChanged<DragStartDetails>? onDragStart;
+
+  /// This callback is called when the user ends dragging the scroll thumb
   final ValueChanged<DragEndDetails>? onDragEnd;
+
+  /// This callback is called during the user's scroll thumb drag process
   final ValueChanged<DragUpdateDetails>? onDragUpdate;
 
   FlexibleScrollbar({
