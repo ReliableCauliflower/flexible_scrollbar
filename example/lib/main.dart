@@ -66,14 +66,10 @@ class _HomeScreenState extends State<HomeScreen> {
           scrollThumbBuilder: (ScrollbarInfo info) {
             return AnimatedContainer(
               width: isVertical
-                  ? info.isDragging
-                      ? thumbDragWidth
-                      : thumbWidth
+                  ? info.isDragging ? thumbDragWidth : thumbWidth
                   : info.thumbMainAxisSize,
               height: !isVertical
-                  ? info.isDragging
-                      ? thumbDragWidth
-                      : thumbWidth
+                  ? info.isDragging ? thumbDragWidth : thumbWidth
                   : info.thumbMainAxisSize,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(5),

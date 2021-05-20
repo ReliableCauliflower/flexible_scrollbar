@@ -355,9 +355,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
                         child: Stack(
                           clipBehavior: Clip.none,
                           alignment: isVertical
-                              ? isEnd
-                                  ? Alignment.topRight
-                                  : Alignment.topLeft
+                              ? isEnd ? Alignment.topRight : Alignment.topLeft
                               : isEnd
                                   ? Alignment.bottomLeft
                                   : Alignment.topLeft,
@@ -389,11 +387,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   Widget fadeAnimationWrapper({required Widget child}) {
     return AnimatedOpacity(
       duration: widget.thumbFadeDuration ?? const Duration(milliseconds: 200),
-      opacity: widget.alwaysVisible
-          ? 1.0
-          : isThumbNeeded
-              ? 1.0
-              : 0.0,
+      opacity: widget.alwaysVisible ? 1.0 : isThumbNeeded ? 1.0 : 0.0,
       child: child,
     );
   }
