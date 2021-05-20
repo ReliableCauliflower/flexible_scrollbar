@@ -2,10 +2,14 @@
 [![pub package](https://img.shields.io/pub/v/flexible_scrollbar)](https://pub.dartlang.org/packages/flexible_scrollbar)
 </br>
 A flexible solution for custom scroll bars.
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/46086231/118855133-2355ad00-b8de-11eb-992f-6f3e726ef507.gif" height=700 align="center"/>
-  <img src="https://user-images.githubusercontent.com/46086231/119000256-a08f2980-b993-11eb-8eba-25a8f68c9d76.gif" height=700 align="center"/>
-</p>
+<div align="center">
+<table>
+  <tr>
+    <td><img src="https://user-images.githubusercontent.com/46086231/118855133-2355ad00-b8de-11eb-992f-6f3e726ef507.gif" height=700 /></td>
+    <td><img src="https://user-images.githubusercontent.com/46086231/119000256-a08f2980-b993-11eb-8eba-25a8f68c9d76.gif" height=700 /></td>
+  </tr>
+</table>
+</div>
 </br>
 
 # Foreword
