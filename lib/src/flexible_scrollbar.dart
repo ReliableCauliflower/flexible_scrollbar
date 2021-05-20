@@ -527,7 +527,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
         barOffset = barMaxScrollExtent!;
       }
 
-      double viewDelta = getScrollViewDelta(mainAxisCoordinate);
+      final double viewDelta = getScrollViewDelta(mainAxisCoordinate);
 
       viewOffset = widget.controller.position.pixels +
           (isReverse ? -viewDelta : viewDelta);

@@ -2,9 +2,11 @@
 [![pub package](https://img.shields.io/pub/v/flexible_scrollbar)](https://pub.dartlang.org/packages/flexible_scrollbar)
 </br>
 A flexible solution for custom scroll bars.
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/46086231/118855133-2355ad00-b8de-11eb-992f-6f3e726ef507.gif" height=700 align="center"/>
+</p>
+</br>
 
-![](https://user-images.githubusercontent.com/46086231/118855133-2355ad00-b8de-11eb-992f-6f3e726ef507.gif)
-</br></br>
 # Foreword
 A package has been designed to allow the creation of complex scroll bars. You can customize the scroll thumb, scroll line and add a label, that is positioned by the center of the scroll thumb by default, but you can customize its position as well. As those three things are created by builders called every time the scroll state is changed, you can add custom animations.
 
