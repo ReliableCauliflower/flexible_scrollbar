@@ -38,8 +38,8 @@ To get a scrollbar simply wrap a scrollable widget with `FlexibleScrollbar` and 
 ```dart
 FlexibleScrollbar(
      controller: scrollController,
-     alwaysVisible: true,
      child: GridView.builder(
+        controller: scrollController,
 ```
 You will get a defaul scroll thumb and settings:</br>
 ![](https://user-images.githubusercontent.com/46086231/118859755-433b9f80-b8e3-11eb-952a-236cfe5d277c.png)
