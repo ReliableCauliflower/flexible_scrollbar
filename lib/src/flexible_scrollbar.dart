@@ -469,7 +469,11 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   }
 
   double getBarDelta(double scrollViewDelta) {
-    return scrollViewDelta * (barMaxScrollExtent ?? 0) / viewMaxScrollExtent!;
+    if (viewMaxScrollExtent != null && viewMaxScrollExtent! > 0) {
+      return scrollViewDelta * (barMaxScrollExtent ?? 0) / viewMaxScrollExtent!;
+    } else {
+      return 1.0;
+    }
   }
 
   void onDragStart(DragStartDetails details) {
@@ -546,7 +550,9 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
         }
         final mainAxisCoordinate = isVertical ? details.localPosition.dy : details.localPosition.dx;
 
-        if (isReverse && mainAxisCoordinate < mainAxisScrollAreaSize! - barOffset && mainAxisCoordinate > mainAxisScrollAreaSize! - (barOffset + thumbMainAxisSize!)) {
+        if (isReverse &&
+            mainAxisCoordinate < mainAxisScrollAreaSize! - barOffset &&
+            mainAxisCoordinate > mainAxisScrollAreaSize! - (barOffset + thumbMainAxisSize!)) {
           return;
         } else if (mainAxisCoordinate > barOffset && mainAxisCoordinate < barOffset + thumbMainAxisSize!) {
           return;
