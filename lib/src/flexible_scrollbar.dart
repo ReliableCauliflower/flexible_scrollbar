@@ -469,7 +469,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
   }
 
   double getBarDelta(double scrollViewDelta) {
-    return scrollViewDelta * barMaxScrollExtent! / viewMaxScrollExtent!;
+    return scrollViewDelta * (barMaxScrollExtent ?? 0) / viewMaxScrollExtent!;
   }
 
   void onDragStart(DragStartDetails details) {
