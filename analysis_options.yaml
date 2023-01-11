@@ -13,3 +13,4 @@ linter:
     await_only_futures: true
     avoid_classes_with_only_static_members: false
     prefer_single_quotes: true
+    lines_longer_than_80_chars: false
