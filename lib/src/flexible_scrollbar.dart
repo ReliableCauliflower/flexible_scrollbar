@@ -176,7 +176,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
       scrollDirection: isScrolling
           ? widget.controller.position.axisDirection
           : scrollAxisDirection!,
-      thumbMainAxisSize: thumbMainAxisSize!,
+      thumbMainAxisSize: thumbMainAxisSize ?? 0,
       thumbMainAxisOffset: barOffset,
     );
   }
