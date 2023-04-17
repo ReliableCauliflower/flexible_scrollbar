@@ -1,11 +1,15 @@
-## [0.1.0] - [May 19, 2021]
+## 0.1.3
 
-* Initial release.
+- Fix [#5](https://github.com/ReliableCauliflower/flexible_scrollbar/pull/5) thanks to [k3rnL](https://github.com/k3rnL)
 
-## [0.1.1] - [May 19, 2021]
+## 0.1.2
 
-* Update some package metadata.
+- Update package description and reformat code.
 
-## [0.1.2] - [May 20, 2021]
+## 0.1.1
 
-* Update package description and reformat code.
+- Update some package metadata.
+
+## 0.1.0
+
+- Initial release.

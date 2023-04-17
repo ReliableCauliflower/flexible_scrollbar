@@ -1,7 +1,8 @@
 name: flexible_scrollbar
 description: A Flexible Scrollbar for Flutter. With this package, you can create custom scroll bars with different predetermined behaviors.
-version: 0.1.2
+version: 0.1.3
 homepage: https://github.com/ReliableCauliflower/flexible_scrollbar
+maintainer: Eugene Ostashko (@ReliableCauliflower)
 
 environment:
   sdk: '>=2.12.0 <3.0.0'

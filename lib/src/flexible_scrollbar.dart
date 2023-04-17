@@ -4,7 +4,6 @@ import 'package:flexible_scrollbar/src/bar_position.dart';
 import 'package:flexible_scrollbar/src/nullable_edge_insets.dart';
 import 'package:flexible_scrollbar/src/scrollbar_info.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 typedef ScrollWidgetBuilder = Widget Function(ScrollbarInfo);
 
@@ -256,7 +255,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
     }
     return OrientationBuilder(
       builder: (_, Orientation orientation) {
-        WidgetsBinding.instance!.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           calculateScrollAreaFields(orientation);
         });
 
