@@ -444,7 +444,7 @@ class _FlexibleScrollbarState extends State<FlexibleScrollbar> {
           isScrollable = true;
           double? thumbMinSize;
           if (widget.thumbMainAxisMinSize != null) {
-            thumbMinSize = thumbMinSize;
+            thumbMinSize = widget.thumbMainAxisMinSize;
           } else {
             thumbMinSize = mainAxisScrollAreaSize! * 0.1;
           }
